@@ -70,7 +70,7 @@ public class Events implements Listener {
             lore.add(plugin.getConfig().getString("main.unDroppableLore"));
             im.setLore(lore);
             teamSelector.setItemMeta(im);
-        }catch(Exception e){e.printStackTrace();}
+        }catch(NullPointerException e){e.printStackTrace();}
         player.getInventory().addItem(teamSelector);
         //Zkontrolovat pocet online hracu
         int onlinePlayers = Bukkit.getOnlinePlayers().size();
@@ -103,10 +103,17 @@ public class Events implements Listener {
         ItemStack item = event.getItem();
         if (item == null) return;
         //kliknul nejakym itemem
-        if(this.plugin.getGameState().isTeamSelectable()){
+        if(this.plugin.getGameState().isTeamSelectable()){ //vyber tymu
             if(item.getType() == Material.RED_BED){
                 event.setCancelled(true);
                 this.plugin.getMenuInstance().openTeamSelectMenu(player);
+            }
+        }
+        if(this.plugin.getGameState() == GameState.SETUP){
+            if(player.getInventory().getHeldItemSlot() == 8){
+                //prepnout smerem dopredu
+                player.performCommand("bw-setup next");
+                event.setCancelled(true);
             }
         }
     }
@@ -152,10 +159,10 @@ public class Events implements Listener {
         Inventory open = event.getClickedInventory();
         ItemStack item = event.getCurrentItem();
         int slot = event.getSlot();
-        player.closeInventory();
         if(event.getView().getTitle().equals(this.plugin.getConfig().getString("main.teamSelectMenuName"))) {
             //Je kliknuto v menu vyberu teamu
             event.setCancelled(true);
+            player.closeInventory();
             int teamCount = this.plugin.getConfig().getInt("arena.teams");
             int playersPerTeam = this.plugin.getConfig().getInt("arena.playersPerTeam");
             //Neni tym plny? Tym balancer

@@ -16,7 +16,7 @@ public class Menu {
         this.plugin = plugin;
     }
 
-    private Material getWoolOfNthTeam(int nth){
+    public Material getWoolOfNthTeam(int nth){
         if(nth==0) return Material.RED_WOOL;
         if(nth==1) return Material.BLUE_WOOL;
         if(nth==2) return Material.LIME_WOOL;

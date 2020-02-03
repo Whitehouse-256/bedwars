@@ -23,6 +23,7 @@ public class BedWars extends JavaPlugin {
         //eventy
         pm.registerEvents(new Events(this), this);
         //prikazy - TBD
+        getCommand("bw-setup").setExecutor(new SetupCommand(this));
         this.saveDefaultConfig();
         this.reloadConfig();
         PluginDescriptionFile pdfFile = this.getDescription();
@@ -56,6 +57,11 @@ public class BedWars extends JavaPlugin {
             new BukkitRunnable(){
                 @Override
                 public void run(){
+                    if(gameState == GameState.SETUP){
+                        //Pokud se zapne SETUP, musi se zrusit start hry
+                        this.cancel();
+                        return;
+                    }
                     if(Bukkit.getOnlinePlayers().size() < getConfig().getInt("game.minPlayers")){
                         //Nekdo odesel, zrusit startovani
                         setGameStarting(false);
@@ -96,6 +102,14 @@ public class BedWars extends JavaPlugin {
             list.remove(player);
             this.playerTeams.put(team, list);
         }
+    }
+
+    public void enableSetup(){
+        this.gameState = GameState.SETUP;
+    }
+
+    public void disableSetup(){
+        this.gameState = GameState.LOBBY;
     }
 
 }

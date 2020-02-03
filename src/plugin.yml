@@ -2,3 +2,7 @@ name: BedWars
 main: com.whitehouse.bedwars.BedWars
 version: 1.0
 api-version: 1.13
+commands:
+  bw-setup:
+    description: Prepnuti do setup rezimu
+    usage: "Pouziti: '/<command>'"

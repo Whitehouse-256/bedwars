@@ -5,7 +5,8 @@ public enum GameState {
     STARTING,
     FULL_STARTING,
     INGAME,
-    RESTARTING;
+    RESTARTING,
+    SETUP;
 
     public boolean isJoinable(){
         switch(this){
