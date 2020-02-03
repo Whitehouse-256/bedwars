@@ -1,2 +1,9 @@
 main:
-  prefix: "&4&l&oBed&f&l&oWars&a> "
+  prefix: "§4§l§oBed§f§l§oWars§a> "
+  cannotJoinMessage: "§cV teto fazi se nemuzes pripojit!"
+  joinMessage: "Vitej ve hre, vyber si tym."
+  teamSelectorName: "§aVyber tymu"
+  unDroppableLore: "§9Undroppable"
+game:
+  minPlayers: 2
+  startingMessage: "Hra startuje"
