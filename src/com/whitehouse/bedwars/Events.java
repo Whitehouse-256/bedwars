@@ -57,7 +57,7 @@ public class Events implements Listener {
         //Zkontrolovat pocet online hracu
         int onlinePlayers = Bukkit.getOnlinePlayers().size();
         if(onlinePlayers >= plugin.getConfig().getInt("game.minPlayers")){
-            //mela by zacit startovat hra
+            //Mela by zacit startovat hra
             if(plugin.getGameState() != GameState.STARTING){
                 plugin.setGameStarting(true);
             }

@@ -5,6 +5,7 @@ main:
   teamSelectorName: "§aVyber tymu"
   unDroppableLore: "§9Undroppable"
 game:
-  minPlayers: 2
+  minPlayers: 1
   startTime: 30
-  startingMessage: "Hra startuje"
+  startingMessage: "Hra startuje."
+  notStartingMessage: "Je tu nedostatek hracu, start byl odlozen."

@@ -3,6 +3,7 @@ package com.whitehouse.bedwars;
 import org.bukkit.plugin.*;
 import org.bukkit.plugin.java.*;
 import org.bukkit.Bukkit;
+import org.bukkit.scheduler.BukkitRunnable;
 
 public class BedWars extends JavaPlugin {
 
@@ -39,8 +40,27 @@ public class BedWars extends JavaPlugin {
             this.gameState = GameState.STARTING;
             Bukkit.broadcastMessage(getPrefix()+getConfig().getString("game.startingMessage"));
             this.startTime = getConfig().getInt("game.startTime");
+            //Spustit casovac
+            new BukkitRunnable(){
+                @Override
+                public void run(){
+                    if(Bukkit.getOnlinePlayers().size() < getConfig().getInt("game.minPlayers")){
+                        //Nekdo odesel, zrusit startovani
+                        setGameStarting(false);
+                    }
+                    startTime--;
+                    if(startTime == 0){
+                        Bukkit.broadcastMessage(getPrefix()+"Hra zacala");
+                        gameState = GameState.INGAME;
+                        this.cancel();
+                        return;
+                    }
+                    Bukkit.broadcastMessage(getPrefix()+"Hra zacne za "+startTime+" sekund!");
+                }
+            }.runTaskTimer(this, 20, 20);
         }else{
             this.gameState = GameState.LOBBY;
+            Bukkit.broadcastMessage(getPrefix()+getConfig().getString("game.notStartingMessage"));
         }
     }
 
