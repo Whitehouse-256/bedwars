@@ -1,6 +1,8 @@
 package com.whitehouse.bedwars;
 
-import org.bukkit.Sound;
+import org.apache.commons.lang.ObjectUtils;
+import org.bukkit.*;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Item;
 import org.bukkit.event.Listener;
 import org.bukkit.event.EventHandler;
@@ -10,25 +12,21 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.player.PlayerDropItemEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.EntityType;
-import org.bukkit.Bukkit;
-import org.bukkit.GameMode;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.EntityEquipment;
-import org.bukkit.Material;
 import org.bukkit.material.MaterialData;
 
 import java.util.ArrayList;
+import java.util.List;
 
+@SuppressWarnings("unused")
 public class Events implements Listener {
     private final BedWars plugin;
 
@@ -60,6 +58,12 @@ public class Events implements Listener {
         player.sendMessage(this.plugin.getPrefix()+plugin.getConfig().getString("main.joinMessage"));
         player.setGameMode(GameMode.SURVIVAL);
         player.setHealth(20.0);
+        player.setFoodLevel(20);
+        if(this.plugin.getConfig().getBoolean("main.runSetup")){
+            for(int i=0; i<3; i++){
+                player.sendMessage(this.plugin.getPrefix()+"§cHra neni nastavena! Pouzij /bw-setup!");
+            }
+        }
         //Vlozit itemy do inventare
         player.getInventory().clear();
         ItemStack teamSelector = new ItemStack(Material.RED_BED);
@@ -83,6 +87,15 @@ public class Events implements Listener {
     }
 
     @EventHandler
+    public void onQuit(PlayerQuitEvent event){
+        int teamCount = this.plugin.getConfig().getInt("arena.teams");
+        Player player = event.getPlayer();
+        for (int i = 0; i < teamCount; i++) {
+            this.plugin.removePlayerFromTeam(i, player);
+        }
+    }
+
+    @EventHandler
     public void onFoodLevelChange(FoodLevelChangeEvent event){
         if(this.plugin.getGameState().isInvincible()) event.setFoodLevel(20);
     }
@@ -92,6 +105,13 @@ public class Events implements Listener {
         if(event.getEntityType() == EntityType.PLAYER){
             if(this.plugin.getGameState().isInvincible()) event.setCancelled(true);
         }
+    }
+
+    private String getResourceById(int id){
+        if(id==0) return "iron";
+        if(id==1) return "gold";
+        if(id==2) return "diamond";
+        return "-";
     }
 
     @EventHandler
@@ -110,10 +130,64 @@ public class Events implements Listener {
             }
         }
         if(this.plugin.getGameState() == GameState.SETUP){
+            event.setCancelled(true);
             if(player.getInventory().getHeldItemSlot() == 8){
-                //prepnout smerem dopredu
+                //prepnout na dalsi nabidku
                 player.performCommand("bw-setup next");
-                event.setCancelled(true);
+            }else{
+                //zjistit, co se ma nastavit
+                ItemStack[] invCont = player.getInventory().getStorageContents();
+                if(invCont[8] != null){
+                    try{
+                        String name = invCont[8].getItemMeta().getDisplayName();
+                        int slot = player.getInventory().getHeldItemSlot();
+                        if(name.contains("Nastaveni postele")){
+                            //Nastavit postel pro tym (slot)
+                            Block clickedBlock = event.getClickedBlock();
+                            if(clickedBlock == null){
+                                player.sendMessage(plugin.getPrefix()+plugin.getConfig().getString("main.clickOnBlock"));
+                                return;
+                            } else if (!clickedBlock.getType().toString().contains("BED")){
+                                player.sendMessage(plugin.getPrefix()+plugin.getConfig().getString("main.clickOnBed"));
+                                return;
+                            }
+                            //Kliknul na postel
+                            String loc = clickedBlock.getX()+";"+clickedBlock.getY()+";"+clickedBlock.getZ();
+                            this.plugin.getConfig().set("arena.beds."+slot, loc);
+                            this.plugin.saveConfig();
+                            player.sendMessage(plugin.getPrefix()+plugin.getConfig().getString("main.successBedSet")+this.plugin.getMenuInstance().getNameOfNthTeam(slot));
+                        }
+                        else if(name.contains("Nastaveni spawnu")){
+                            //Nastavit spawn tymu (slot)
+                            Location location = player.getLocation();
+                            String loc = location.getX()+";"+location.getY()+";"+location.getZ()+";"+location.getYaw()+";"+location.getPitch();
+                            this.plugin.getConfig().set("arena.spawn."+slot, loc);
+                            this.plugin.saveConfig();
+                            player.sendMessage(plugin.getPrefix()+plugin.getConfig().getString("main.successSpawnSet")+this.plugin.getMenuInstance().getNameOfNthTeam(slot));
+                        }
+                        else if(name.contains("Ostatni nastaveni")){
+                            if(slot <= 2){
+                                //Nastavit spawner na itemy
+                                Location location = player.getLocation();
+                                String loc = location.getBlockX() + ";" + location.getBlockY() + ";" + location.getBlockZ();
+                                List<String> list = this.plugin.getConfig().getStringList("arena.resources." + getResourceById(slot));
+                                list.add(loc);
+                                this.plugin.getConfig().set("arena.resources." + getResourceById(slot), list);
+                                this.plugin.saveConfig();
+                                player.sendMessage(plugin.getPrefix()+plugin.getConfig().getString("main.successResourceSpawnerAdded")+getResourceById(slot));
+                            }
+                            else if(slot == 3){
+                                //Nastavit global spawn (lobby)
+                                Location location = player.getLocation();
+                                String loc = location.getX()+";"+location.getY()+";"+location.getZ()+";"+location.getYaw()+";"+location.getPitch();
+                                this.plugin.getConfig().set("arena.lobby", loc);
+                                this.plugin.saveConfig();
+                                player.sendMessage(plugin.getPrefix()+plugin.getConfig().getString("main.successLobbySet")+this.plugin.getMenuInstance().getNameOfNthTeam(slot));
+                            }
+                            else event.setCancelled(false);
+                        }
+                    }catch(NullPointerException e){e.printStackTrace();}
+                }
             }
         }
     }

@@ -1,15 +1,22 @@
 main:
+  runSetup: true
   prefix: "§4§l§oBed§f§l§oWars§a> "
   cannotJoinMessage: "§cV teto fazi se nemuzes pripojit!"
   serverFullMessage: "§cServer je plny"
   joinMessage: "Vitej ve hre, vyber si tym."
   teamSelectorName: "§aVyber tymu"
-  teamSelectMenuName: "§aVyber si tym:"
+  teamSelectMenuName: "§2Vyber si tym:"
   teamClickToJoin: "§a§nKlikni pro pripojeni"
   teamIsFull: "§cTeam je plny"
   joinedTeam: "§7Pripojil ses do tymu: "
   unDroppableLore: "§9Undroppable"
   soulBoundLore: "§9Soulbound"
+  clickOnBlock: "§cMusis kliknout na blok."
+  clickOnBed: "§cMusis kliknout na postel."
+  successBedSet: "§aPostel nastavena pro: "
+  successSpawnSet: "§aSpawn nastaven pro: "
+  successResourceSpawnerAdded: "§aPridan spawner na surovinu "
+  successLobbySet: "§aNastaveno herni lobby"
 game:
   minPlayers: 1
   startTime: 30

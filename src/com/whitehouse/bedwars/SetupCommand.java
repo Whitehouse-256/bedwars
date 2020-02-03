@@ -34,7 +34,7 @@ public class SetupCommand implements CommandExecutor {
             player.sendMessage("§aVlnou nastavis danou vec pro dany tym, poslednim itemem (na slotu 9) zmenis nastavovanou vec.");
             player.sendMessage("§aDale nastav §2/bw-setup teams <1-8> §apocet tymu.");
             player.sendMessage("§aDale nastav §2/bw-setup playersPerTeam <1-32> §apocet hracu v tymu.");
-            player.sendMessage("§aNakonec napis §2/bw-setup done <1-32> §apro uzavreni nastaveni mapy.");
+            player.sendMessage("§aNakonec napis §2/bw-setup done §apro uzavreni nastaveni mapy.");
             this.plugin.enableSetup();
             //Itemy do inventare
             player.getInventory().clear();
@@ -54,6 +54,8 @@ public class SetupCommand implements CommandExecutor {
         }else{
             if(args[0].equalsIgnoreCase("done")){
                 this.plugin.disableSetup();
+                this.plugin.getConfig().set("main.runSetup", false);
+                this.plugin.saveConfig();
                 return true;
             }
             if(args[0].equalsIgnoreCase("next")){
@@ -83,21 +85,27 @@ public class SetupCommand implements CommandExecutor {
 
                             ItemStack it1 = new ItemStack(Material.IRON_INGOT);
                             im = it1.getItemMeta();
-                            im.setDisplayName("Pridat spawn na irony");
+                            im.setDisplayName("Pridat spawn na irony §2§lRCLICK");
                             it1.setItemMeta(im);
                             player.getInventory().addItem(it1);
 
                             ItemStack it2 = new ItemStack(Material.GOLD_INGOT);
                             im = it2.getItemMeta();
-                            im.setDisplayName("Pridat spawn na goldy");
+                            im.setDisplayName("Pridat spawn na goldy §2§lRCLICK");
                             it2.setItemMeta(im);
                             player.getInventory().addItem(it2);
 
                             ItemStack it3 = new ItemStack(Material.DIAMOND);
                             im = it3.getItemMeta();
-                            im.setDisplayName("Pridat spawn na diamanty");
+                            im.setDisplayName("Pridat spawn na diamanty §2§lRCLICK");
                             it3.setItemMeta(im);
                             player.getInventory().addItem(it3);
+
+                            ItemStack it4 = new ItemStack(Material.CHICKEN_SPAWN_EGG);
+                            im = it4.getItemMeta();
+                            im.setDisplayName("Nastavit lobby §2§lRCLICK");
+                            it4.setItemMeta(im);
+                            player.getInventory().addItem(it4);
 
                             for(int i=0; i<5; i++){
                                 ItemStack span = new ItemStack(Material.BARRIER);
