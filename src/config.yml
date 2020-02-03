@@ -1,11 +1,20 @@
 main:
   prefix: "§4§l§oBed§f§l§oWars§a> "
   cannotJoinMessage: "§cV teto fazi se nemuzes pripojit!"
+  serverFullMessage: "§cServer je plny"
   joinMessage: "Vitej ve hre, vyber si tym."
   teamSelectorName: "§aVyber tymu"
+  teamSelectMenuName: "§aVyber si tym:"
+  teamClickToJoin: "§a§nKlikni pro pripojeni"
+  teamIsFull: "§cTeam je plny"
+  joinedTeam: "§7Pripojil ses do tymu: "
   unDroppableLore: "§9Undroppable"
+  soulBoundLore: "§9Soulbound"
 game:
   minPlayers: 1
   startTime: 30
   startingMessage: "Hra startuje."
   notStartingMessage: "Je tu nedostatek hracu, start byl odlozen."
+arena:
+  teams: 4
+  playersPerTeam: 4
