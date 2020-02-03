@@ -7,6 +7,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.EntityType;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.inventory.PlayerInventory;
