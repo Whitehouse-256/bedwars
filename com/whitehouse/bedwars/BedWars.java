@@ -7,6 +7,7 @@ import org.bukkit.Bukkit;
 public class BedWars extends JavaPlugin {
 
     private GameState gameState = GameState.LOBBY;
+    private int startTime;
 
     @Override
     public void onEnable() {
@@ -37,6 +38,7 @@ public class BedWars extends JavaPlugin {
         if(starting){
             this.gameState = GameState.STARTING;
             Bukkit.broadcastMessage(getPrefix()+getConfig().getString("game.startingMessage"));
+            this.startTime = getConfig().getInt("game.startTime");
         }else{
             this.gameState = GameState.LOBBY;
         }

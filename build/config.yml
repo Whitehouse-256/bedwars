@@ -6,4 +6,5 @@ main:
   unDroppableLore: "§9Undroppable"
 game:
   minPlayers: 2
+  startTime: 30
   startingMessage: "Hra startuje"
