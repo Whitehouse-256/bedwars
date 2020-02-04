@@ -3,17 +3,16 @@ package com.whitehouse.bedwars;
 import org.apache.commons.lang.ObjectUtils;
 import org.bukkit.*;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.event.Listener;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.block.Action;
-import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.FoodLevelChangeEvent;
+import org.bukkit.event.entity.*;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.*;
-import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.PlayerInventory;
@@ -217,7 +216,7 @@ public class Events implements Listener {
         }
     }
 
-    private int getMaxInTeam(){
+    public int getMaxInTeam(){
         int onlinePlayerCount = Bukkit.getOnlinePlayers().size();
         int teamCount = this.plugin.getConfig().getInt("arena.teams");
         int playersPerTeam = this.plugin.getConfig().getInt("arena.playersPerTeam");
@@ -235,22 +234,54 @@ public class Events implements Listener {
         int slot = event.getSlot();
         if(event.getView().getTitle().equals(this.plugin.getConfig().getString("main.teamSelectMenuName"))) {
             //Je kliknuto v menu vyberu teamu
-            event.setCancelled(true);
-            player.closeInventory();
             int teamCount = this.plugin.getConfig().getInt("arena.teams");
             int playersPerTeam = this.plugin.getConfig().getInt("arena.playersPerTeam");
+            if(slot >= teamCount) return; //kliknuto mimo vlny - ignorovat
+            event.setCancelled(true);
+            player.closeInventory();
             //Neni tym plny? Tym balancer
             int maxInTeam = getMaxInTeam();
             if(this.plugin.getPlayersInTeam(slot).size() >= maxInTeam){
                 player.sendMessage(this.plugin.getPrefix()+this.plugin.getConfig().getString("main.teamIsFull"));
             }else {
-                for (int i = 0; i < teamCount; i++) {
-                    if (i == slot) this.plugin.addPlayerToTeam(i, player);
-                    else this.plugin.removePlayerFromTeam(i, player);
-                }
-                player.sendMessage(this.plugin.getPrefix()+this.plugin.getConfig().getString("main.joinedTeam")+this.plugin.getMenuInstance().getNameOfNthTeam(slot));
+                plugin.addPlayerToTeamAndRemoveFromOthers(slot, player);
             }
         }
     }
 
+    @EventHandler
+    public void onRespawn(PlayerRespawnEvent event){
+        Player player = event.getPlayer();
+        int team = plugin.getTeamOfPlayer(player);
+        if(this.plugin.getGameState() == GameState.INGAME){
+            Location respawnLoc = plugin.teamSpawns.get(team);
+            event.setRespawnLocation(respawnLoc);
+        }
+    }
+
+    @EventHandler
+    public void onPlayerDeath(PlayerDeathEvent event){ //dropovat pri smrti pouze dia a emeraldy
+        Player player = event.getEntity();
+        List<ItemStack> drops = event.getDrops();
+        for(int i=0; i < drops.size(); i++){
+            if(drops.get(i) == null) continue;
+            if(drops.get(i).getType() != Material.DIAMOND && drops.get(i).getType() != Material.EMERALD){
+                drops.set(i, null);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onPlayerDamageByPlayer(EntityDamageByEntityEvent event) {
+        if (event.getEntityType() == EntityType.PLAYER) {
+            Player player = (Player) event.getEntity();
+            Entity attacker = event.getDamager();
+            if(attacker.getType() == EntityType.PLAYER){ //utoci hrac na hrace
+                Player attackerPlayer = (Player) attacker;
+                if(player.getHealth()<=0){ //zabil ho
+                    attackerPlayer.getInventory().addItem(new ItemStack(Material.EMERALD));
+                }
+            }
+        }
+    }
 }
