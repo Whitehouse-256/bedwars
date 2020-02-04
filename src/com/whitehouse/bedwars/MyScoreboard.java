@@ -37,4 +37,12 @@ public class MyScoreboard {
         t.setSuffix(suffix);
     }
 
+    public void setLineCount(int count){
+        for(int i=0; i<9; i++){
+            Score thisLine = obj.getScore("§"+i);
+            if(i<count) thisLine.setScore(9-i);
+            else globalScoreboard.resetScores("§"+i);
+        }
+    }
+
 }

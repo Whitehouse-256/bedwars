@@ -1,6 +1,5 @@
 package com.whitehouse.bedwars;
 
-import com.mysql.fabric.xmlrpc.base.Array;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -22,6 +21,7 @@ public class BedWars extends JavaPlugin {
     private Menu menuInstance;
     private MyScoreboard myScoreboardInstance;
     private HashMap<Integer, ArrayList<Player>> playerTeams = new HashMap<Integer, ArrayList<Player>>();
+    private HashMap<Integer, Boolean> teamBeds = new HashMap<Integer, Boolean>();
     private BukkitRunnable gameLoop;
     private Random random;
     public List<Location> teamSpawns = new ArrayList<Location>();
@@ -41,6 +41,8 @@ public class BedWars extends JavaPlugin {
         this.myScoreboardInstance = new MyScoreboard(this);
         this.random = new Random();
         this.myScoreboardInstance.setLine(0, "Lobby", "");
+        this.myScoreboardInstance.setLine(1, "Pripojujte se", "");
+        this.myScoreboardInstance.setLineCount(2);
     }
 
     @Override
@@ -67,7 +69,6 @@ public class BedWars extends JavaPlugin {
     private void startGameAndLoop(){
         this.reloadConfig();
         int teamCount = getConfig().getInt("arena.teams");
-        this.myScoreboardInstance.setLine(0, "Arena je ve ", "§fhre");
 
         //Nacist team spawny (viz nize reseni spawneru)
         //Spawner: team spawn
@@ -98,6 +99,16 @@ public class BedWars extends JavaPlugin {
             p.teleport(teamSpawns.get(team));
             //Vycisten inventar a teleportovan
         }
+
+        //Udelat scoreboard:
+        this.myScoreboardInstance.setLine(0, "Arena je ve ", "§fhre");
+        for(int i=1; i<=teamCount; i++) {
+            boolean hasBed = (getPlayersInTeam(i-1).size() > 0);
+            this.teamBeds.put(i-1, hasBed);
+            String suffix = (hasBed ? getConfig().getString("game.charHasBed") : getConfig().getString("game.charEliminated"));
+            this.myScoreboardInstance.setLine(i, this.menuInstance.getNameOfNthTeam(i-1), suffix);
+        }
+        this.myScoreboardInstance.setLineCount(teamCount+1);
 
         /* Vyresit spawnery:
         Nejdriv si nactu vsechny mozny resource spawnery do listu,
@@ -140,12 +151,24 @@ public class BedWars extends JavaPlugin {
             resourceSpawners_4.add(location);
         }
 
+        //Spustit game loop
+        this.startTime = 0;
         this.gameLoop = new BukkitRunnable() {
-            private long ticks = 0;
+            //private long startTime = 0;
             @Override
             public void run() {
-                ticks++; //kazdych 10 ticku projde tato funkce
+                startTime++; //kazdych 10 ticku projde tato funkce
                 //Game Loop:
+                //Updatovani scoreboardu
+                int seconds = startTime/2;
+                int minutes = seconds/60;
+                seconds -= minutes*60;
+                myScoreboardInstance.setLine(0, "Hra bezi uz: ", String.format("§a%02d:%02d", minutes, seconds));
+                for(int i=1; i<=teamCount; i++) {
+                    boolean hasBed = teamBeds.get(i-1);
+                    String suffix = (hasBed ? getConfig().getString("game.charHasBed") : (getPlayersInTeam(i-1).size()>0? " §e"+getPlayersInTeam(i-1).size() : getConfig().getString("game.charEliminated")));
+                    myScoreboardInstance.setLine(i, menuInstance.getNameOfNthTeam(i-1), suffix);
+                }
                 //Spawnout vsechny itemy, co se maji spawnout
                 //base iron spawner - kazdych 10 ticku
                 for(Location l : teamSpawns){
@@ -155,7 +178,7 @@ public class BedWars extends JavaPlugin {
                     loc.getWorld().dropItem(loc, is);
                 }
                 //base gold spawner - kazdych 100 ticku
-                if(ticks%10 == 0){
+                if(startTime %10 == 0){
                     for(Location l : teamSpawns){
                         Location loc = l.clone();
                         loc.add(2*random.nextDouble()-1.0, 0, 2*random.nextDouble()-1.0); //radius 2
@@ -164,7 +187,7 @@ public class BedWars extends JavaPlugin {
                     }
                 }
                 //iron spawner - kazdych 20 ticku
-                if(ticks%2 == 0){
+                if(startTime %2 == 0){
                     for(Location l : resourceSpawners_2){
                         Location loc = l.clone();
                         ItemStack is = new ItemStack(Material.IRON_INGOT);
@@ -173,7 +196,7 @@ public class BedWars extends JavaPlugin {
                 }
                 //List<String> spawnerList1 = getConfig().getStringList();
                 //gold spawner - kazdych 40 ticku
-                if(ticks%4 == 0){
+                if(startTime %4 == 0){
                     for(Location l : resourceSpawners_3){
                         Location loc = l.clone();
                         ItemStack is = new ItemStack(Material.GOLD_INGOT);
@@ -181,7 +204,7 @@ public class BedWars extends JavaPlugin {
                     }
                 }
                 //diamond spawner - kazdych 300 ticku
-                if(ticks%30 == 0){
+                if(startTime %30 == 0){
                     for(Location l : resourceSpawners_4){
                         Location loc = l.clone();
                         ItemStack is = new ItemStack(Material.DIAMOND);
@@ -199,6 +222,7 @@ public class BedWars extends JavaPlugin {
             Bukkit.broadcastMessage(getPrefix()+getConfig().getString("game.startingMessage"));
             this.startTime = getConfig().getInt("game.startTime");
             this.myScoreboardInstance.setLine(0, "Zacatek za: ", "§a"+this.startTime+" §fsekund");
+            this.myScoreboardInstance.setLineCount(1);
             //Spustit casovac
             new BukkitRunnable(){
                 @Override
@@ -292,6 +316,10 @@ public class BedWars extends JavaPlugin {
 
     public void disableSetup(){
         this.gameState = GameState.LOBBY;
+    }
+
+    public boolean teamHasBed(int team){
+        return this.teamBeds.getOrDefault(team, false);
     }
 
 }

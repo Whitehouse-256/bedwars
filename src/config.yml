@@ -23,6 +23,8 @@ game:
   startTime: 30
   startingMessage: "Hra startuje."
   notStartingMessage: "Je tu nedostatek hracu, start byl odlozen."
+  charHasBed: " §a§l✔"
+  charEliminated: " §c§l✘"
 arena:
   teams: 4
   playersPerTeam: 4
