@@ -20,6 +20,7 @@ public class BedWars extends JavaPlugin {
     private GameState gameState = GameState.LOBBY;
     private int startTime;
     private Menu menuInstance;
+    private MyScoreboard myScoreboardInstance;
     private HashMap<Integer, ArrayList<Player>> playerTeams = new HashMap<Integer, ArrayList<Player>>();
     private BukkitRunnable gameLoop;
     private Random random;
@@ -37,7 +38,9 @@ public class BedWars extends JavaPlugin {
         PluginDescriptionFile pdfFile = this.getDescription();
         getLogger().info(pdfFile.getName()+" version "+pdfFile.getVersion()+" is enabled!");
         this.menuInstance = new Menu(this);
+        this.myScoreboardInstance = new MyScoreboard(this);
         this.random = new Random();
+        this.myScoreboardInstance.setLine(0, "Lobby", "");
     }
 
     @Override
@@ -57,9 +60,14 @@ public class BedWars extends JavaPlugin {
         return this.menuInstance;
     }
 
+    public MyScoreboard getMyScoreboardInstance(){
+        return this.myScoreboardInstance;
+    }
+
     private void startGameAndLoop(){
         this.reloadConfig();
         int teamCount = getConfig().getInt("arena.teams");
+        this.myScoreboardInstance.setLine(0, "Arena je ve ", "§fhre");
 
         //Nacist team spawny (viz nize reseni spawneru)
         //Spawner: team spawn
@@ -190,6 +198,7 @@ public class BedWars extends JavaPlugin {
             this.gameState = GameState.STARTING;
             Bukkit.broadcastMessage(getPrefix()+getConfig().getString("game.startingMessage"));
             this.startTime = getConfig().getInt("game.startTime");
+            this.myScoreboardInstance.setLine(0, "Zacatek za: ", "§a"+this.startTime+" §fsekund");
             //Spustit casovac
             new BukkitRunnable(){
                 @Override
@@ -212,11 +221,13 @@ public class BedWars extends JavaPlugin {
                         return;
                     }
                     Bukkit.broadcastMessage(getPrefix()+"Hra zacne za "+startTime+" sekund!");
+                    myScoreboardInstance.setLine(0, "Zacatek za: ", "§a"+startTime+" §fsekund");
                 }
             }.runTaskTimer(this, 20, 20);
         }else{
             this.gameState = GameState.LOBBY;
             Bukkit.broadcastMessage(getPrefix()+getConfig().getString("game.notStartingMessage"));
+            this.myScoreboardInstance.setLine(0, "Lobby", "");
         }
     }
 

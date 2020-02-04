@@ -83,6 +83,7 @@ public class Events implements Listener {
                 plugin.setGameStarting(true);
             }
         }
+        player.setScoreboard(plugin.getMyScoreboardInstance().getGlobalScoreboard());
     }
 
     @EventHandler

@@ -17,6 +17,7 @@ main:
   successSpawnSet: "§aSpawn nastaven pro: "
   successResourceSpawnerAdded: "§aPridan spawner na surovinu "
   successLobbySet: "§aNastaveno herni lobby"
+  scoreboardLobbyName: "§4Bed§fWars"
 game:
   minPlayers: 1
   startTime: 30
