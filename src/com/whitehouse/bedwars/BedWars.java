@@ -20,6 +20,7 @@ public class BedWars extends JavaPlugin {
     private int startTime;
     private Menu menuInstance;
     private MyScoreboard myScoreboardInstance;
+    private MapRegenerator mapRegeneratorInstance;
     private HashMap<Integer, ArrayList<Player>> playerTeams = new HashMap<Integer, ArrayList<Player>>();
     private HashMap<Integer, Boolean> teamBeds = new HashMap<Integer, Boolean>();
     private BukkitRunnable gameLoop;
@@ -39,6 +40,7 @@ public class BedWars extends JavaPlugin {
         getLogger().info(pdfFile.getName()+" version "+pdfFile.getVersion()+" is enabled!");
         this.menuInstance = new Menu(this);
         this.myScoreboardInstance = new MyScoreboard(this);
+        this.mapRegeneratorInstance = new MapRegenerator(this);
         this.random = new Random();
         this.myScoreboardInstance.setLine(0, "Lobby", "");
         this.myScoreboardInstance.setLine(1, "Pripojujte se", "");
@@ -64,6 +66,10 @@ public class BedWars extends JavaPlugin {
 
     public MyScoreboard getMyScoreboardInstance(){
         return this.myScoreboardInstance;
+    }
+
+    public MapRegenerator getMapRegeneratorInstance(){
+        return this.mapRegeneratorInstance;
     }
 
     private void startGameAndLoop(){

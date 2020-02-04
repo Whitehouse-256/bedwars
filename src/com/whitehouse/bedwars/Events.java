@@ -197,7 +197,6 @@ public class Events implements Listener {
         Player pl = event.getPlayer();
         Item it = event.getItemDrop();
         ItemStack is = it.getItemStack();
-        if(!is.hasItemMeta()){it.remove(); return;}
         ItemMeta im = is.getItemMeta();
         try {
             ArrayList<String> lore = new ArrayList<String>(im.getLore());
