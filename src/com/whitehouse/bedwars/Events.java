@@ -1,13 +1,11 @@
 package com.whitehouse.bedwars;
 
-import org.apache.commons.lang.ObjectUtils;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.event.Listener;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.inventory.ClickType;
@@ -15,12 +13,9 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.EntityType;
-import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.EntityEquipment;
-import org.bukkit.material.MaterialData;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,9 +46,7 @@ public class Events implements Listener {
         }
     }
 
-    @EventHandler
-    public void onJoin(PlayerJoinEvent event){
-        Player player = event.getPlayer();
+    public void handlePlayerJoin(Player player){
         player.sendMessage(this.plugin.getPrefix()+plugin.getConfig().getString("main.joinMessage"));
         player.setGameMode(GameMode.SURVIVAL);
         player.setHealth(20.0);
@@ -75,6 +68,18 @@ public class Events implements Listener {
             teamSelector.setItemMeta(im);
         }catch(NullPointerException e){e.printStackTrace();}
         player.getInventory().addItem(teamSelector);
+        //Teleportovat hrace do herniho lobby
+        String lobbyLoc = plugin.getConfig().getString("arena.lobby", null);
+        if(lobbyLoc != null){
+            String[] split = lobbyLoc.split(";");
+            double x = Double.parseDouble(split[0]);
+            double y = Double.parseDouble(split[1]);
+            double z = Double.parseDouble(split[2]);
+            float yaw = Float.parseFloat(split[3]);
+            float pitch = Float.parseFloat(split[4]);
+            Location lobby = new Location(Bukkit.getWorld("world"), x, y, z, yaw, pitch);
+            player.teleport(lobby);
+        }
         //Zkontrolovat pocet online hracu
         int onlinePlayers = Bukkit.getOnlinePlayers().size();
         if(onlinePlayers >= plugin.getConfig().getInt("game.minPlayers")){
@@ -83,7 +88,13 @@ public class Events implements Listener {
                 plugin.setGameStarting(true);
             }
         }
-        player.setScoreboard(plugin.getMyScoreboardInstance().getGlobalScoreboard());
+        player.setScoreboard(plugin.getMyScoreboardInstance().getGlobalSidebarScoreboard());
+    }
+
+    @EventHandler
+    public void onJoin(PlayerJoinEvent event){
+        Player player = event.getPlayer();
+        handlePlayerJoin(player);
     }
 
     @EventHandler
@@ -182,7 +193,7 @@ public class Events implements Listener {
                                 String loc = location.getX()+";"+location.getY()+";"+location.getZ()+";"+location.getYaw()+";"+location.getPitch();
                                 this.plugin.getConfig().set("arena.lobby", loc);
                                 this.plugin.saveConfig();
-                                player.sendMessage(plugin.getPrefix()+plugin.getConfig().getString("main.successLobbySet")+this.plugin.getMenuInstance().getNameOfNthTeam(slot));
+                                player.sendMessage(plugin.getPrefix()+plugin.getConfig().getString("main.successLobbySet"));
                             }
                             else event.setCancelled(false);
                         }

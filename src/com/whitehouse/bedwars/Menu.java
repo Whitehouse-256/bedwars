@@ -1,6 +1,7 @@
 package com.whitehouse.bedwars;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
@@ -14,6 +15,18 @@ public class Menu {
 
     public Menu(BedWars plugin){
         this.plugin = plugin;
+    }
+
+    public ChatColor getColorOfNthTeam(int nth){
+        if(nth==0) return ChatColor.getByChar('c');
+        if(nth==1) return ChatColor.getByChar('9');
+        if(nth==2) return ChatColor.getByChar('a');
+        if(nth==3) return ChatColor.getByChar('e');
+        if(nth==4) return ChatColor.getByChar('5');
+        if(nth==5) return ChatColor.getByChar('6');
+        if(nth==6) return ChatColor.getByChar('d');
+        if(nth==7) return ChatColor.getByChar('3');
+        return ChatColor.WHITE;
     }
 
     public Material getWoolOfNthTeam(int nth){

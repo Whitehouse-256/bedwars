@@ -1,5 +1,6 @@
 package com.whitehouse.bedwars;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -60,6 +61,10 @@ public class SetupCommand implements CommandExecutor {
                 this.plugin.disableSetup();
                 this.plugin.getConfig().set("main.runSetup", false);
                 this.plugin.saveConfig();
+                ArrayList<Player> onlinePlayers = new ArrayList<Player>(Bukkit.getOnlinePlayers());
+                for(Player p : onlinePlayers) {
+                    this.plugin.getEventsInstance().handlePlayerJoin(p);
+                }
                 return true;
             }
             if(args[0].equalsIgnoreCase("next")){
@@ -111,7 +116,7 @@ public class SetupCommand implements CommandExecutor {
                             it4.setItemMeta(im);
                             player.getInventory().addItem(it4);
 
-                            for(int i=0; i<5; i++){
+                            for(int i=0; i<4; i++){
                                 ItemStack span = new ItemStack(Material.BARRIER);
                                 im = span.getItemMeta();
                                 im.setDisplayName("(nic)§"+i);

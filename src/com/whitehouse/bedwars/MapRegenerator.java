@@ -6,6 +6,7 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
+import org.bukkit.block.Sign;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.craftbukkit.libs.jline.internal.Nullable;
 import org.bukkit.entity.Player;
@@ -68,8 +69,8 @@ public class MapRegenerator {
 
         if(player != null) player.sendMessage(plugin.getPrefix()+"§aZacinam ukladat bloky do seznamu. Toto muze chvili trvat...");
 
-        for(int x=min_x; x<=max_x; x++){
-            for(int y=min_y; y<=max_y; y++){
+        for(int y=min_y; y<=max_y; y++){
+            for(int x=min_x; x<=max_x; x++){
                 for(int z=min_z; z<=max_z; z++){
                     //Pro kazdy blok postupne
                     BlockState blockState = bound1.getWorld().getBlockAt(x, y, z).getState();
@@ -90,7 +91,20 @@ public class MapRegenerator {
             public void run(){
                 String save = "";
                 for(BlockState bs : localCopy){
-                    String serial = bs.getX()+";"+bs.getY()+";"+bs.getZ()+";"+bs.getType().toString()+";"+bs.getBlockData().getAsString();
+                    String add = "";
+                    if(bs.getType().toString().contains("SIGN")){
+                        try{
+                            Sign sign = (Sign)bs;
+                            String[] lines = sign.getLines();
+                            add += ";";
+                            for(String line : lines){
+                                add += line.replace("\\", "/BACK/")+"\\n";
+                            }
+                        }catch(Exception e){
+                            e.printStackTrace();
+                        }
+                    }
+                    String serial = bs.getX()+";"+bs.getY()+";"+bs.getZ()+";"+bs.getType().toString()+";"+bs.getBlockData().getAsString()+add;
                     save += serial+'\n';
                 }
                 try {
@@ -134,13 +148,21 @@ public class MapRegenerator {
                     while(sc.hasNextLine()){
                         String data = sc.nextLine();
                         //zpracovat data z linky
-                        String[] parts = data.split(";", 5);
+                        String[] parts = data.split(";", 6);
                         int x = Integer.parseInt(parts[0]);
                         int y = Integer.parseInt(parts[1]);
                         int z = Integer.parseInt(parts[2]);
                         Material material = Material.valueOf(parts[3]);
                         BlockData blockData = Bukkit.createBlockData(parts[4]);
-                        ConcreteBlockState concreteBlockState = new ConcreteBlockState(x, y, z, material, blockData);
+                        String signLines = null;
+                        if(material.toString().contains("SIGN")){
+                            try{
+                                signLines = parts[5];
+                            }catch(Exception e){
+                                e.printStackTrace();
+                            }
+                        }
+                        ConcreteBlockState concreteBlockState = new ConcreteBlockState(x, y, z, material, blockData, signLines);
                         localList.add(concreteBlockState);
                     }
                     sc.close();
@@ -148,13 +170,54 @@ public class MapRegenerator {
                         @Override
                         public void run() {
                             //zkopirovat data do main threadu a tam pokracovat
+                            ArrayList<ConcreteBlockState> bedHeads = new ArrayList<ConcreteBlockState>();
+                            ArrayList<ConcreteBlockState> bedFoots = new ArrayList<ConcreteBlockState>();
                             if(player != null) player.sendMessage(localPlugin.getPrefix()+"§aNacteno "+localList.size()+" bloku ze souboru!");
                             //v druhem threadu se k datum v localList uz nepristupuje, je to tedy bezpecne tady v main threadu
                             World world = Bukkit.getWorld("world");
+                            assert world != null;
                             for(ConcreteBlockState cbs : localList){
+                                if(cbs.material.toString().contains("BED")){
+                                    //postele se musi resit tak, ze se nejdrive postavi head, potom az foot
+                                    if(cbs.blockData.getAsString().contains("part=head")){
+                                        bedHeads.add(cbs);
+                                    }else{
+                                        bedFoots.add(cbs);
+                                    }
+                                    continue;
+                                }
                                 Block b = world.getBlockAt(cbs.x, cbs.y, cbs.z);
                                 b.setType(cbs.material);
                                 b.setBlockData(cbs.blockData);
+                                if(cbs.signLines != null){
+                                    try {
+                                        Sign sign = (Sign) b.getState();
+                                        String[] lines = cbs.signLines.split("\\\\n");
+                                        for (int i = 0; i < lines.length && i < 4; i++) {
+                                            sign.setLine(i, lines[i].replace("/BACK/", "\\"));
+                                        }
+                                        sign.update();
+                                    }catch (Exception e){
+                                        e.printStackTrace();
+                                    }
+                                }
+                            }
+                            //Ted postavit postele
+                            for(ConcreteBlockState cbsHead : bedHeads){
+                                //Najit odpovidajici foot cast
+                                for(ConcreteBlockState cbsFoot : bedFoots){
+                                    if((cbsHead.x-cbsFoot.x)*(cbsHead.x-cbsFoot.x) + (cbsHead.y-cbsFoot.y)*(cbsHead.y-cbsFoot.y) + (cbsHead.z-cbsFoot.z)*(cbsHead.z-cbsFoot.z) == 1){
+                                        //Je to vedlejsi blok -> odpovidajici postel
+                                        //Nejdriv postavit head
+                                        Block b = world.getBlockAt(cbsHead.x, cbsHead.y, cbsHead.z);
+                                        b.setType(cbsHead.material);
+                                        b.setBlockData(cbsHead.blockData);
+                                        //Pak postavit foot
+                                        b = world.getBlockAt(cbsFoot.x, cbsFoot.y, cbsFoot.z);
+                                        b.setType(cbsFoot.material);
+                                        b.setBlockData(cbsFoot.blockData);
+                                    }
+                                }
                             }
                             if(player != null) player.sendMessage(localPlugin.getPrefix()+"§aBloky regenerovany!");
                         }

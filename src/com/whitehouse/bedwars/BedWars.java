@@ -18,6 +18,7 @@ public class BedWars extends JavaPlugin {
 
     private GameState gameState = GameState.LOBBY;
     private int startTime;
+    private Events eventsInstance;
     private Menu menuInstance;
     private MyScoreboard myScoreboardInstance;
     private MapRegenerator mapRegeneratorInstance;
@@ -31,7 +32,8 @@ public class BedWars extends JavaPlugin {
     public void onEnable() {
         PluginManager pm = getServer().getPluginManager();
         //eventy
-        pm.registerEvents(new Events(this), this);
+        this.eventsInstance = new Events(this);
+        pm.registerEvents(this.eventsInstance, this);
         //prikazy - TBD
         getCommand("bw-setup").setExecutor(new SetupCommand(this));
         this.saveDefaultConfig();
@@ -72,6 +74,10 @@ public class BedWars extends JavaPlugin {
         return this.mapRegeneratorInstance;
     }
 
+    public Events getEventsInstance(){
+        return this.eventsInstance;
+    }
+
     private void startGameAndLoop(){
         this.reloadConfig();
         int teamCount = getConfig().getInt("arena.teams");
@@ -103,6 +109,7 @@ public class BedWars extends JavaPlugin {
             //Vsichni hraci jsou v nejakem tymu
             p.getInventory().clear();
             p.teleport(teamSpawns.get(team));
+            this.getMyScoreboardInstance().addPlayerToTeam(team, p);
             //Vycisten inventar a teleportovan
         }
 
@@ -163,6 +170,11 @@ public class BedWars extends JavaPlugin {
             //private long startTime = 0;
             @Override
             public void run() {
+                if(getGameState() != GameState.INGAME){
+                    //Vypnout game loop kdyz se prerusi hra
+                    this.cancel();
+                    return;
+                }
                 startTime++; //kazdych 10 ticku projde tato funkce
                 //Game Loop:
                 //Updatovani scoreboardu
@@ -245,9 +257,9 @@ public class BedWars extends JavaPlugin {
                     startTime--;
                     if(startTime == 0){
                         Bukkit.broadcastMessage(getPrefix()+"Hra zacala");
+                        this.cancel();
                         gameState = GameState.INGAME;
                         startGameAndLoop();
-                        this.cancel();
                         return;
                     }
                     Bukkit.broadcastMessage(getPrefix()+"Hra zacne za "+startTime+" sekund!");
