@@ -2,6 +2,7 @@ package com.whitehouse.bedwars;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -30,6 +31,18 @@ public class Menu {
         if(nth==6) return ChatColor.getByChar('d');
         if(nth==7) return ChatColor.getByChar('3');
         return ChatColor.WHITE;
+    }
+
+    public Color getDyeColorOfNthTeam(int nth){
+        if(nth==0) return Color.fromRGB(255, 0, 0);
+        if(nth==1) return Color.fromRGB(50, 0, 255);
+        if(nth==2) return Color.fromRGB(0, 255, 0);
+        if(nth==3) return Color.fromRGB(255, 255, 0);
+        if(nth==4) return Color.fromRGB(128, 0, 128);
+        if(nth==5) return Color.fromRGB(255, 160, 0);
+        if(nth==6) return Color.fromRGB(255, 128, 150);
+        if(nth==7) return Color.fromRGB(0, 160, 160);
+        return Color.WHITE;
     }
 
     public Material getWoolOfNthTeam(int nth){

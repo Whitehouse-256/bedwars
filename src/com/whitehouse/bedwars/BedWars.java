@@ -27,6 +27,7 @@ public class BedWars extends JavaPlugin {
     private BukkitRunnable gameLoop;
     private Random random;
     public List<Location> teamSpawns = new ArrayList<Location>();
+    private HashMap<Player, Integer> playerArmor = new HashMap<Player, Integer>();
 
     @Override
     public void onEnable() {
@@ -109,6 +110,7 @@ public class BedWars extends JavaPlugin {
             //Vsichni hraci jsou v nejakem tymu
             p.getInventory().clear();
             p.teleport(teamSpawns.get(team));
+            this.eventsInstance.setPlayersArmor(p);
             this.getMyScoreboardInstance().addPlayerToTeam(team, p);
             //Vycisten inventar a teleportovan
         }
@@ -338,6 +340,15 @@ public class BedWars extends JavaPlugin {
 
     public boolean teamHasBed(int team){
         return this.teamBeds.getOrDefault(team, false);
+    }
+
+    public int getPlayerArmor(Player player){
+        int armor = this.playerArmor.getOrDefault(player, 0);
+        return armor;
+    }
+
+    public void setPlayerArmor(Player player, int armor){
+        this.playerArmor.put(player, armor);
     }
 
 }

@@ -10,17 +10,18 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.*;
-import org.bukkit.event.inventory.ClickType;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.*;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.LeatherArmorMeta;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @SuppressWarnings("unused")
@@ -230,6 +231,11 @@ public class Events implements Listener {
         }
     }
 
+    @EventHandler
+    public void onCraft(CraftItemEvent event){
+        event.setCancelled(true);
+    }
+
     public int getMaxInTeam(){
         int onlinePlayerCount = Bukkit.getOnlinePlayers().size();
         int teamCount = this.plugin.getConfig().getInt("arena.teams");
@@ -237,6 +243,131 @@ public class Events implements Listener {
         int max = (int) Math.ceil(((double)onlinePlayerCount)/teamCount);
         if(max > playersPerTeam) return playersPerTeam;
         return max;
+    }
+
+    public Material getMaterialFromResourceName(String resource){
+        if(resource.equalsIgnoreCase("IRON")){
+            return Material.IRON_INGOT;
+        }else if(resource.equalsIgnoreCase("GOLD")){
+            return Material.GOLD_INGOT;
+        }else if(resource.equalsIgnoreCase("DIAMOND")){
+            return Material.DIAMOND;
+        }else if(resource.equalsIgnoreCase("EMERALD")){
+            return Material.EMERALD;
+        }
+        return null;
+    }
+
+    public void setPlayersArmor(Player player){
+        int armor = this.plugin.getPlayerArmor(player);
+        PlayerInventory playerInventory = player.getInventory();
+        int team = plugin.getTeamOfPlayer(player);
+
+        ItemMeta im = null;
+        LeatherArmorMeta lam = null;
+        try {
+            ItemStack chestplate = new ItemStack(Material.LEATHER_CHESTPLATE);
+            im = chestplate.getItemMeta();
+            lam = (LeatherArmorMeta) im;
+            lam.setColor(this.plugin.getMenuInstance().getDyeColorOfNthTeam(team));
+            lam.setLore(Collections.singletonList(plugin.getConfig().getString("main.unDroppableLore")));
+            chestplate.setItemMeta(lam);
+            playerInventory.setChestplate(chestplate);
+
+            if(armor == 1){
+                //Leather brneni
+                ItemStack helmet = new ItemStack(Material.LEATHER_HELMET);
+                im = helmet.getItemMeta();
+                lam = (LeatherArmorMeta)im;
+                lam.setColor(this.plugin.getMenuInstance().getDyeColorOfNthTeam(team));
+                lam.setLore(Collections.singletonList(plugin.getConfig().getString("main.unDroppableLore")));
+                helmet.setItemMeta(lam);
+                playerInventory.setHelmet(helmet);
+
+                ItemStack leggings = new ItemStack(Material.LEATHER_LEGGINGS);
+                im = leggings.getItemMeta();
+                lam = (LeatherArmorMeta)im;
+                lam.setColor(this.plugin.getMenuInstance().getDyeColorOfNthTeam(team));
+                lam.setLore(Collections.singletonList(plugin.getConfig().getString("main.unDroppableLore")));
+                leggings.setItemMeta(lam);
+                playerInventory.setLeggings(leggings);
+
+                ItemStack boots = new ItemStack(Material.LEATHER_BOOTS);
+                im = boots.getItemMeta();
+                lam = (LeatherArmorMeta)im;
+                lam.setColor(this.plugin.getMenuInstance().getDyeColorOfNthTeam(team));
+                lam.setLore(Collections.singletonList(plugin.getConfig().getString("main.unDroppableLore")));
+                boots.setItemMeta(lam);
+                playerInventory.setBoots(boots);
+            }else if(armor == 2){
+                //Iron brneni
+                ItemStack helmet = new ItemStack(Material.IRON_HELMET);
+                im = helmet.getItemMeta();
+                im.setLore(Collections.singletonList(plugin.getConfig().getString("main.unDroppableLore")));
+                helmet.setItemMeta(im);
+                playerInventory.setHelmet(helmet);
+
+                ItemStack leggings = new ItemStack(Material.IRON_LEGGINGS);
+                im = leggings.getItemMeta();
+                im.setLore(Collections.singletonList(plugin.getConfig().getString("main.unDroppableLore")));
+                leggings.setItemMeta(im);
+                playerInventory.setLeggings(leggings);
+
+                ItemStack boots = new ItemStack(Material.IRON_BOOTS);
+                im = boots.getItemMeta();
+                im.setLore(Collections.singletonList(plugin.getConfig().getString("main.unDroppableLore")));
+                boots.setItemMeta(im);
+                playerInventory.setBoots(boots);
+            }else if(armor == 3){
+                //Diamond brneni
+                ItemStack helmet = new ItemStack(Material.DIAMOND_HELMET);
+                im = helmet.getItemMeta();
+                im.setLore(Collections.singletonList(plugin.getConfig().getString("main.unDroppableLore")));
+                helmet.setItemMeta(im);
+                playerInventory.setHelmet(helmet);
+
+                ItemStack leggings = new ItemStack(Material.DIAMOND_LEGGINGS);
+                im = leggings.getItemMeta();
+                im.setLore(Collections.singletonList(plugin.getConfig().getString("main.unDroppableLore")));
+                leggings.setItemMeta(im);
+                playerInventory.setLeggings(leggings);
+
+                ItemStack boots = new ItemStack(Material.DIAMOND_BOOTS);
+                im = boots.getItemMeta();
+                im.setLore(Collections.singletonList(plugin.getConfig().getString("main.unDroppableLore")));
+                boots.setItemMeta(im);
+                playerInventory.setBoots(boots);
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    public void processShopBoughtItem(Player player, int category, ItemStack clickedItem){
+        ItemStack itemToGive = clickedItem.clone();
+        if(category == 0){
+            //Armor - perma upgrade
+            int boughtArmor = 0;
+            if(itemToGive.getType() == Material.LEATHER_CHESTPLATE) boughtArmor = 1;
+            else if(itemToGive.getType() == Material.IRON_CHESTPLATE) boughtArmor = 2;
+            else if(itemToGive.getType() == Material.DIAMOND_CHESTPLATE) boughtArmor = 3;
+            this.plugin.setPlayerArmor(player, boughtArmor);
+            this.setPlayersArmor(player);
+        }else{
+            //Itemy na givnuti
+            ItemMeta im = itemToGive.getItemMeta();
+            im.setLore(null);
+            String displayName = im.getDisplayName();
+            if(displayName.contains("×")){
+                displayName = displayName.replaceFirst("\\d×[ ]*", "");
+                if(!displayName.substring(0, 1).equals("§")){
+                    displayName = "§f"+displayName;
+                }
+                im.setDisplayName(displayName);
+            }
+            itemToGive.setItemMeta(im);
+            player.getInventory().addItem(itemToGive);
+        }
     }
 
     @EventHandler
@@ -269,7 +400,7 @@ public class Events implements Listener {
                 plugin.addPlayerToTeamAndRemoveFromOthers(slot, player);
             }
         }
-        if(event.getView().getTitle().equals(this.plugin.getConfig().getString("game.shopMenuName"))) {
+        else if(event.getView().getTitle().equals(this.plugin.getConfig().getString("game.shopMenuName"))) {
             //Otevren shop
             if(open == null){ //kliknuto mimo inventar
                 player.closeInventory();
@@ -326,13 +457,69 @@ public class Events implements Listener {
                 ArrayList<ItemStack> list = this.plugin.getMenuInstance().getShopCategoryItems(selectedCategory, player);
                 int clickedItemSlot = slot-18;
                 try {
+                    if(selectedCategory == 0){
+                        //Armor
+                        if(this.plugin.getPlayerArmor(player) > clickedItemSlot){
+                            //Jiz ma stejny nebo lepsi armor, nekupovat znovu
+                            player.sendMessage(this.plugin.getPrefix()+this.plugin.getConfig().getString("game.shopAlreadyHaveArmor"));
+                            return;
+                        }
+                    }
                     ItemStack clickedItem = list.get(clickedItemSlot);
                     ItemMeta im = clickedItem.getItemMeta();
                     List<String> lore = im.getLore();
                     String priceLine = lore.get(lore.size()-1);
+                    String[] priceSplit = priceLine.split(" ");
+                    int priceNumber = Integer.parseInt(priceSplit[0].substring(2));
+                    String priceItem = priceSplit[1];
+                    //Zkontrolovat, jestli hrac ma dostatek potrebnych itemu
+                    ItemStack[] invContents = player.getInventory().getStorageContents();
+                    int itemsLeft = priceNumber;
+                    Material neededMaterial = getMaterialFromResourceName(priceItem);
+                    for(ItemStack is : invContents){
+                        if(is == null) continue;
+                        if(is.getType() == neededMaterial){
+                            int amount = is.getAmount();
+                            itemsLeft -= amount;
+                            if(itemsLeft <= 0){
+                                itemsLeft = 0;
+                                break;
+                            }
+                        }
+                    }
                     player.sendMessage("§fCena: "+priceLine);
-                }catch(Exception e){/**/}
+                    if(itemsLeft == 0){
+                        player.sendMessage("§aMas dostatek itemu na koupi");
+                        //Sebrat itemy
+                        int itemsToRemoveLeft = priceNumber;
+                        for(ItemStack is : invContents){
+                            if(is == null) continue;
+                            if(is.getType() == neededMaterial){
+                                int amount = is.getAmount();
+                                while(amount > 0 && itemsToRemoveLeft > 0) {
+                                    is.setAmount(amount-1);
+                                    itemsToRemoveLeft--;
+                                    amount = is.getAmount();
+                                    if (itemsToRemoveLeft <= 0) {
+                                        itemsToRemoveLeft = 0;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        //Itemy odebrány, udělat správný nákup (přidat hráči to, co si koupil)
+                        this.processShopBoughtItem(player, selectedCategory, clickedItem);
+                    }else{
+                        player.sendMessage("§cNa koupi ti chybi "+itemsLeft+"× "+neededMaterial.toString());
+                    }
+                }catch(Exception e){
+                    e.printStackTrace();
+                }
             }
+        }
+        else if(event.getSlotType() == InventoryType.SlotType.ARMOR){
+            //Zakazat sundavani armoru
+            event.setCancelled(true);
         }
     }
 
@@ -343,6 +530,7 @@ public class Events implements Listener {
         if(this.plugin.getGameState() == GameState.INGAME){
             Location respawnLoc = plugin.teamSpawns.get(team);
             event.setRespawnLocation(respawnLoc);
+            this.setPlayersArmor(player);
         }
     }
 
