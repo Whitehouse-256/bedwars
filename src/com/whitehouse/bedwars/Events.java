@@ -4,22 +4,20 @@ import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Item;
+import org.bukkit.entity.*;
 import org.bukkit.event.Listener;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.*;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @SuppressWarnings("unused")
 public class Events implements Listener {
@@ -64,7 +62,9 @@ public class Events implements Listener {
 
     @EventHandler
     public void onFoodLevelChange(FoodLevelChangeEvent event){
-        if(this.plugin.getGameState().isInvincible()) event.setFoodLevel(20);
+        //jidlo nema ubyvat nikde a nikdy
+        event.setFoodLevel(20);
+        //if(this.plugin.getGameState().isInvincible()) event.setFoodLevel(20);
     }
 
     @EventHandler
@@ -148,6 +148,13 @@ public class Events implements Listener {
                         }
                     }catch(NullPointerException e){e.printStackTrace();}
                 }
+            }
+        }else if(plugin.getGameState() == GameState.INGAME){
+            //specialni itemy ve hre
+            if(item.getType() == Material.FIRE_CHARGE){
+                event.setCancelled(true);
+                item.setAmount(item.getAmount()-1); //sebrat 1 item z ruky
+                this.plugin.getPlayerUtilsInstance().shootFireball(player);
             }
         }
     }
@@ -388,6 +395,20 @@ public class Events implements Listener {
             //Je to cedulka shopu
             this.plugin.getShopUtilsInstance().openShopMenu(player);
         }
+    }
+
+    @EventHandler
+    public void onFireballHit(ProjectileHitEvent event){
+        if(!(event.getEntity() instanceof Fireball)){
+            return;
+        }
+        //je to fireball
+        Block hitBlock = event.getHitBlock();
+        if(hitBlock == null){
+            hitBlock = Objects.requireNonNull(event.getHitEntity()).getLocation().getBlock();
+        }
+        //vzit bloky v okoli a znicit je
+        hitBlock.getWorld().playEffect(hitBlock.getLocation(), Effect.SMOKE, 0);
     }
 
 }

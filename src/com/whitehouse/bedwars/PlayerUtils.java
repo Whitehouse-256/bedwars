@@ -1,6 +1,8 @@
 package com.whitehouse.bedwars;
 
 import org.bukkit.*;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Fireball;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -250,5 +252,14 @@ public class PlayerUtils {
         player.openInventory(inv);
     }
 
+    public void shootFireball(Player player){
+        Location eye = player.getEyeLocation();
+        Location loc = eye.add(eye.getDirection().multiply(1.2));
+        Fireball fireball = (Fireball) loc.getWorld().spawnEntity(loc, EntityType.FIREBALL);
+        fireball.setVelocity(loc.getDirection().multiply(2));
+        fireball.setShooter(player);
+        fireball.setIsIncendiary(false);
+        fireball.setYield(0F);
+    }
 
 }
