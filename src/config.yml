@@ -26,7 +26,8 @@ game:
   charHasBed: " §a§l✔"
   charEliminated: " §c§l✘"
   shopMenuName: "§2Shop"
-  shopAlreadyHaveArmor: "Muzes si koupit pouze lepsi brneni!"
+  shopAlreadyHaveArmor: "§cMuzes si koupit pouze lepsi brneni!"
+  shopNotEnoughResources: "§cNemas dostatek itemu ke koupi!"
 shop:
   categoryArmor: "§aBrneni"
   categoryWeapons: "§cZbrane"

@@ -9,9 +9,9 @@ import java.util.ArrayList;
 public class MyScoreboard {
 
     private final BedWars plugin;
-    private Scoreboard globalSidebarScoreboard;
-    private Objective obj;
-    private ArrayList<Team> lines = new ArrayList<Team>();
+    private final Scoreboard globalSidebarScoreboard;
+    private final Objective obj;
+    private final ArrayList<Team> lines = new ArrayList<Team>();
     private Objective teamColorsObj = null;
 
     public MyScoreboard(BedWars plugin){
@@ -58,8 +58,8 @@ public class MyScoreboard {
             }catch(Exception e){/*divna vec, ale ok*/}
         }
         Team rightTeam = this.globalSidebarScoreboard.getTeam("team"+team);
-        rightTeam.setColor(plugin.getMenuInstance().getColorOfNthTeam(team));
-        //rightTeam.setPrefix(plugin.getMenuInstance().getColorOfNthTeam(team)+" ");
+        rightTeam.setColor(plugin.getPlayerUtilsInstance().getColorOfNthTeam(team));
+        //rightTeam.setPrefix(plugin.getMenuInstance().getColorOfNthTeam(team)+" "); //pokud by se chtel davat i prefix
         rightTeam.addEntry(player.getName());
     }
 

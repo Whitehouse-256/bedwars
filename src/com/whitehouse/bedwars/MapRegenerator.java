@@ -15,12 +15,11 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Scanner;
 
 public class MapRegenerator {
     private final BedWars plugin;
-    private ArrayList<BlockState> mapData = new ArrayList<BlockState>();
+    private final ArrayList<BlockState> mapData = new ArrayList<BlockState>();
     private Location bound1;
     private Location bound2;
 
@@ -83,33 +82,33 @@ public class MapRegenerator {
     }
 
     public void saveMap(@Nullable Player player){
-        ArrayList<BlockState> localCopy = (ArrayList<BlockState>) this.mapData.clone();
+        ArrayList<BlockState> localCopy = new ArrayList<BlockState>(this.mapData);
         BedWars localPlugin = this.plugin;
         File dir = this.plugin.getDataFolder();
         if(player != null) player.sendMessage(plugin.getPrefix()+"§aVytvarim nove vlakno pro ulozeni bloku do souboru. Toto muze chvili trvat...");
         Thread thread = new Thread(){
             public void run(){
-                String save = "";
+                StringBuilder save = new StringBuilder();
                 for(BlockState bs : localCopy){
-                    String add = "";
+                    StringBuilder add = new StringBuilder();
                     if(bs.getType().toString().contains("SIGN")){
                         try{
                             Sign sign = (Sign)bs;
                             String[] lines = sign.getLines();
-                            add += ";";
+                            add.append(";");
                             for(String line : lines){
-                                add += line.replace("\\", "/BACK/")+"\\n";
+                                add.append(line.replace("\\", "/BACK/")).append("\\n");
                             }
                         }catch(Exception e){
                             e.printStackTrace();
                         }
                     }
                     String serial = bs.getX()+";"+bs.getY()+";"+bs.getZ()+";"+bs.getType().toString()+";"+bs.getBlockData().getAsString()+add;
-                    save += serial+'\n';
+                    save.append(serial).append('\n');
                 }
                 try {
                     FileWriter fw = new FileWriter(new File(dir, "arenaBlocks.csv"));
-                    fw.write(save);
+                    fw.write(save.toString());
                     fw.close();
                     Bukkit.getScheduler().runTask(localPlugin, new Runnable() {
                         @Override
@@ -138,10 +137,6 @@ public class MapRegenerator {
         Thread thread = new Thread(){
             public void run(){
                 ArrayList<ConcreteBlockState> localList = new ArrayList<ConcreteBlockState>();
-//                for(BlockState bs : localCopy){
-//                    String serial = bs.getX()+";"+bs.getY()+";"+bs.getZ()+";"+bs.getType().toString()+";"+bs.getBlockData().getAsString();
-//                    save += serial;
-//                }
                 try {
                     File dataFile = new File(dir, "arenaBlocks.csv");
                     Scanner sc = new Scanner(dataFile);

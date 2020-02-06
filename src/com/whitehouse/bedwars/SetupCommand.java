@@ -44,9 +44,9 @@ public class SetupCommand implements CommandExecutor {
             //Itemy do inventare
             player.getInventory().clear();
             for(int i=0; i<8; i++){
-                ItemStack wool = new ItemStack(this.plugin.getMenuInstance().getWoolOfNthTeam(i));
+                ItemStack wool = new ItemStack(this.plugin.getPlayerUtilsInstance().getWoolOfNthTeam(i));
                 ItemMeta im = wool.getItemMeta();
-                im.setDisplayName("Nastavit postel pro: "+this.plugin.getMenuInstance().getNameOfNthTeam(i)+" §2§lRCLICK");
+                im.setDisplayName("Nastavit postel pro: "+this.plugin.getPlayerUtilsInstance().getNameOfNthTeam(i)+" §2§lRCLICK");
                 wool.setItemMeta(im);
                 player.getInventory().addItem(wool);
             }
@@ -63,7 +63,7 @@ public class SetupCommand implements CommandExecutor {
                 this.plugin.saveConfig();
                 ArrayList<Player> onlinePlayers = new ArrayList<Player>(Bukkit.getOnlinePlayers());
                 for(Player p : onlinePlayers) {
-                    this.plugin.getEventsInstance().handlePlayerJoin(p);
+                    this.plugin.getPlayerUtilsInstance().handlePlayerJoin(p);
                 }
                 return true;
             }
@@ -75,9 +75,9 @@ public class SetupCommand implements CommandExecutor {
                             //posunout na dalsi nastaveni
                             player.getInventory().clear();
                             for(int i=0; i<8; i++){
-                                ItemStack wool = new ItemStack(this.plugin.getMenuInstance().getWoolOfNthTeam(i));
+                                ItemStack wool = new ItemStack(this.plugin.getPlayerUtilsInstance().getWoolOfNthTeam(i));
                                 ItemMeta im = wool.getItemMeta();
-                                im.setDisplayName("Nastavit spawn pro: "+this.plugin.getMenuInstance().getNameOfNthTeam(i)+" §2§lRCLICK");
+                                im.setDisplayName("Nastavit spawn pro: "+this.plugin.getPlayerUtilsInstance().getNameOfNthTeam(i)+" §2§lRCLICK");
                                 wool.setItemMeta(im);
                                 player.getInventory().addItem(wool);
                             }
@@ -133,9 +133,9 @@ public class SetupCommand implements CommandExecutor {
                             //posunout na dalsi nastaveni
                             player.getInventory().clear();
                             for(int i=0; i<8; i++){
-                                ItemStack wool = new ItemStack(this.plugin.getMenuInstance().getWoolOfNthTeam(i));
+                                ItemStack wool = new ItemStack(this.plugin.getPlayerUtilsInstance().getWoolOfNthTeam(i));
                                 ItemMeta im = wool.getItemMeta();
-                                im.setDisplayName("Nastavit postel pro: "+this.plugin.getMenuInstance().getNameOfNthTeam(i)+" §2§lRCLICK");
+                                im.setDisplayName("Nastavit postel pro: "+this.plugin.getPlayerUtilsInstance().getNameOfNthTeam(i)+" §2§lRCLICK");
                                 wool.setItemMeta(im);
                                 player.getInventory().addItem(wool);
                             }

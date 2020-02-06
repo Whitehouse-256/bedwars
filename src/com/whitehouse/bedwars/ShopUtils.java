@@ -1,8 +1,6 @@
 package com.whitehouse.bedwars;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -14,84 +12,38 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 
-public class Menu {
+public class ShopUtils {
     private final BedWars plugin;
 
-    public Menu(BedWars plugin){
+    public ShopUtils(BedWars plugin){
         this.plugin = plugin;
     }
 
-    public ChatColor getColorOfNthTeam(int nth){
-        if(nth==0) return ChatColor.getByChar('c');
-        if(nth==1) return ChatColor.getByChar('9');
-        if(nth==2) return ChatColor.getByChar('a');
-        if(nth==3) return ChatColor.getByChar('e');
-        if(nth==4) return ChatColor.getByChar('5');
-        if(nth==5) return ChatColor.getByChar('6');
-        if(nth==6) return ChatColor.getByChar('d');
-        if(nth==7) return ChatColor.getByChar('3');
-        return ChatColor.WHITE;
-    }
-
-    public Color getDyeColorOfNthTeam(int nth){
-        if(nth==0) return Color.fromRGB(255, 0, 0);
-        if(nth==1) return Color.fromRGB(50, 0, 255);
-        if(nth==2) return Color.fromRGB(0, 255, 0);
-        if(nth==3) return Color.fromRGB(255, 255, 0);
-        if(nth==4) return Color.fromRGB(128, 0, 128);
-        if(nth==5) return Color.fromRGB(255, 160, 0);
-        if(nth==6) return Color.fromRGB(255, 128, 150);
-        if(nth==7) return Color.fromRGB(0, 160, 160);
-        return Color.WHITE;
-    }
-
-    public Material getWoolOfNthTeam(int nth){
-        if(nth==0) return Material.RED_WOOL;
-        if(nth==1) return Material.BLUE_WOOL;
-        if(nth==2) return Material.LIME_WOOL;
-        if(nth==3) return Material.YELLOW_WOOL;
-        if(nth==4) return Material.PURPLE_WOOL;
-        if(nth==5) return Material.ORANGE_WOOL;
-        if(nth==6) return Material.PINK_WOOL;
-        if(nth==7) return Material.CYAN_WOOL;
-        return Material.WHITE_WOOL;
-    }
-
-    public String getNameOfNthTeam(int nth){
-        if(nth==0) return "§cCerveny tym";
-        if(nth==1) return "§9Modry tym";
-        if(nth==2) return "§aZeleny tym";
-        if(nth==3) return "§eZluty tym";
-        if(nth==4) return "§5Fialovy tym";
-        if(nth==5) return "§6Oranzovy tym";
-        if(nth==6) return "§dRuzovy tym";
-        if(nth==7) return "§3Tyrkysovy tym";
-        return "Bezbarvy tym";
-    }
-
-    public void openTeamSelectMenu(Player player){
-        Inventory inv = Bukkit.createInventory(null, 9, this.plugin.getConfig().getString("main.teamSelectMenuName"));
-        ItemMeta im = null;
-        //Vytvorit jednotlive itemy pro tymy
-        int teamCount = this.plugin.getConfig().getInt("arena.teams");
-        int playersPerTeam = this.plugin.getConfig().getInt("arena.playersPerTeam");
-        for(int i=0; i<teamCount; i++){
-            ItemStack wool = new ItemStack(getWoolOfNthTeam(i));
-            im = wool.getItemMeta();
-            ArrayList<Player> playersInTeam = this.plugin.getPlayersInTeam(i);
-            int playersInTeamCount = playersInTeam.size();
-            im.setDisplayName(getNameOfNthTeam(i)+" "+playersInTeamCount+"/"+playersPerTeam);
-            ArrayList<String> lore = new ArrayList<String>();
-            for(Player p : playersInTeam){
-                lore.add("§f- "+p.getName());
+    public void processShopBoughtItem(Player player, int category, ItemStack clickedItem){
+        ItemStack itemToGive = clickedItem.clone();
+        if(category == 0){
+            //Armor - perma upgrade
+            int boughtArmor = 0;
+            if(itemToGive.getType() == Material.LEATHER_CHESTPLATE) boughtArmor = 1;
+            else if(itemToGive.getType() == Material.IRON_CHESTPLATE) boughtArmor = 2;
+            else if(itemToGive.getType() == Material.DIAMOND_CHESTPLATE) boughtArmor = 3;
+            this.plugin.setPlayerArmor(player, boughtArmor);
+            this.plugin.getPlayerUtilsInstance().setPlayersArmor(player);
+        }else{
+            //Itemy na givnuti
+            ItemMeta im = itemToGive.getItemMeta();
+            im.setLore(null);
+            String displayName = im.getDisplayName();
+            if(displayName.contains("×")){
+                displayName = displayName.replaceFirst("\\d×[ ]*", "");
+                if(!displayName.substring(0, 1).equals("§")){
+                    displayName = "§f"+displayName;
+                }
+                im.setDisplayName(displayName);
             }
-            if(playersInTeamCount < playersPerTeam) lore.add(plugin.getConfig().getString("main.teamClickToJoin"));
-            else lore.add(plugin.getConfig().getString("main.teamIsFull"));
-            im.setLore(lore);
-            wool.setItemMeta(im);
-            inv.setItem(i, wool);
+            itemToGive.setItemMeta(im);
+            player.getInventory().addItem(itemToGive);
         }
-        player.openInventory(inv);
     }
 
     public String getItemPriceString(String configKey){
@@ -247,7 +199,7 @@ public class Menu {
         else if(cat == 3){
             //Blocks
 
-            ItemStack item_1 = new ItemStack(getWoolOfNthTeam(this.plugin.getTeamOfPlayer(player)));
+            ItemStack item_1 = new ItemStack(this.plugin.getPlayerUtilsInstance().getWoolOfNthTeam(this.plugin.getTeamOfPlayer(player)));
             item_1.setAmount(8);
             im = item_1.getItemMeta();
             if(im!=null) im.setDisplayName(this.plugin.getConfig().getString("shop.names.blocks.eight_wool"));

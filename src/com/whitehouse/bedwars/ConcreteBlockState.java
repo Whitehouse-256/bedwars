@@ -4,12 +4,12 @@ import org.bukkit.Material;
 import org.bukkit.block.data.BlockData;
 
 public class ConcreteBlockState {
-    public int x;
-    public int y;
-    public int z;
-    public Material material;
-    public BlockData blockData;
-    public String signLines;
+    public final int x;
+    public final int y;
+    public final int z;
+    public final Material material;
+    public final BlockData blockData;
+    public final String signLines;
     public ConcreteBlockState(int x, int y, int z, Material material, BlockData blockData, String signLines){
         this.x = x;
         this.y = y;

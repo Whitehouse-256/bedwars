@@ -16,12 +16,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.LeatherArmorMeta;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 @SuppressWarnings("unused")
@@ -50,55 +47,10 @@ public class Events implements Listener {
         }
     }
 
-    public void handlePlayerJoin(Player player){
-        player.sendMessage(this.plugin.getPrefix()+plugin.getConfig().getString("main.joinMessage"));
-        player.setGameMode(GameMode.SURVIVAL);
-        player.setHealth(20.0);
-        player.setFoodLevel(20);
-        if(this.plugin.getConfig().getBoolean("main.runSetup")){
-            for(int i=0; i<3; i++){
-                player.sendMessage(this.plugin.getPrefix()+"§cHra neni nastavena! Pouzij /bw-setup!");
-            }
-        }
-        //Vlozit itemy do inventare
-        player.getInventory().clear();
-        ItemStack teamSelector = new ItemStack(Material.RED_BED);
-        try {
-            ItemMeta im = teamSelector.getItemMeta();
-            im.setDisplayName(plugin.getConfig().getString("main.teamSelectorName"));
-            ArrayList<String> lore = new ArrayList<String>();
-            lore.add(plugin.getConfig().getString("main.unDroppableLore"));
-            im.setLore(lore);
-            teamSelector.setItemMeta(im);
-        }catch(NullPointerException e){e.printStackTrace();}
-        player.getInventory().addItem(teamSelector);
-        //Teleportovat hrace do herniho lobby
-        String lobbyLoc = plugin.getConfig().getString("arena.lobby", null);
-        if(lobbyLoc != null){
-            String[] split = lobbyLoc.split(";");
-            double x = Double.parseDouble(split[0]);
-            double y = Double.parseDouble(split[1]);
-            double z = Double.parseDouble(split[2]);
-            float yaw = Float.parseFloat(split[3]);
-            float pitch = Float.parseFloat(split[4]);
-            Location lobby = new Location(Bukkit.getWorld("world"), x, y, z, yaw, pitch);
-            player.teleport(lobby);
-        }
-        //Zkontrolovat pocet online hracu
-        int onlinePlayers = Bukkit.getOnlinePlayers().size();
-        if(onlinePlayers >= plugin.getConfig().getInt("game.minPlayers")){
-            //Mela by zacit startovat hra
-            if(plugin.getGameState() != GameState.STARTING){
-                plugin.setGameStarting(true);
-            }
-        }
-        player.setScoreboard(plugin.getMyScoreboardInstance().getGlobalSidebarScoreboard());
-    }
-
     @EventHandler
     public void onJoin(PlayerJoinEvent event){
         Player player = event.getPlayer();
-        handlePlayerJoin(player);
+        this.plugin.getPlayerUtilsInstance().handlePlayerJoin(player);
     }
 
     @EventHandler
@@ -122,13 +74,6 @@ public class Events implements Listener {
         }
     }
 
-    private String getResourceById(int id){
-        if(id==0) return "iron";
-        if(id==1) return "gold";
-        if(id==2) return "diamond";
-        return "-";
-    }
-
     @EventHandler
     public void onRightclick(PlayerInteractEvent event) {
         if (event.getAction() != Action.RIGHT_CLICK_AIR && event.getAction() != Action.RIGHT_CLICK_BLOCK) {
@@ -141,7 +86,7 @@ public class Events implements Listener {
         if(this.plugin.getGameState().isTeamSelectable()){ //vyber tymu
             if(item.getType() == Material.RED_BED){
                 event.setCancelled(true);
-                this.plugin.getMenuInstance().openTeamSelectMenu(player);
+                this.plugin.getPlayerUtilsInstance().openTeamSelectMenu(player);
             }
         }
         if(this.plugin.getGameState() == GameState.SETUP){
@@ -170,7 +115,7 @@ public class Events implements Listener {
                             String loc = clickedBlock.getX()+";"+clickedBlock.getY()+";"+clickedBlock.getZ();
                             this.plugin.getConfig().set("arena.beds."+slot, loc);
                             this.plugin.saveConfig();
-                            player.sendMessage(plugin.getPrefix()+plugin.getConfig().getString("main.successBedSet")+this.plugin.getMenuInstance().getNameOfNthTeam(slot));
+                            player.sendMessage(plugin.getPrefix()+plugin.getConfig().getString("main.successBedSet")+this.plugin.getPlayerUtilsInstance().getNameOfNthTeam(slot));
                         }
                         else if(name.contains("Nastaveni spawnu")){
                             //Nastavit spawn tymu (slot)
@@ -178,18 +123,18 @@ public class Events implements Listener {
                             String loc = location.getX()+";"+location.getY()+";"+location.getZ()+";"+location.getYaw()+";"+location.getPitch();
                             this.plugin.getConfig().set("arena.spawn."+slot, loc);
                             this.plugin.saveConfig();
-                            player.sendMessage(plugin.getPrefix()+plugin.getConfig().getString("main.successSpawnSet")+this.plugin.getMenuInstance().getNameOfNthTeam(slot));
+                            player.sendMessage(plugin.getPrefix()+plugin.getConfig().getString("main.successSpawnSet")+this.plugin.getPlayerUtilsInstance().getNameOfNthTeam(slot));
                         }
                         else if(name.contains("Ostatni nastaveni")){
                             if(slot <= 2){
                                 //Nastavit spawner na itemy
                                 Location location = player.getLocation();
                                 String loc = location.getBlockX() + ";" + location.getBlockY() + ";" + location.getBlockZ();
-                                List<String> list = this.plugin.getConfig().getStringList("arena.resources." + getResourceById(slot));
+                                List<String> list = this.plugin.getConfig().getStringList("arena.resources." + this.plugin.getPlayerUtilsInstance().getResourceById(slot));
                                 list.add(loc);
-                                this.plugin.getConfig().set("arena.resources." + getResourceById(slot), list);
+                                this.plugin.getConfig().set("arena.resources." + this.plugin.getPlayerUtilsInstance().getResourceById(slot), list);
                                 this.plugin.saveConfig();
-                                player.sendMessage(plugin.getPrefix()+plugin.getConfig().getString("main.successResourceSpawnerAdded")+getResourceById(slot));
+                                player.sendMessage(plugin.getPrefix()+plugin.getConfig().getString("main.successResourceSpawnerAdded")+this.plugin.getPlayerUtilsInstance().getResourceById(slot));
                             }
                             else if(slot == 3){
                                 //Nastavit global spawn (lobby)
@@ -236,140 +181,6 @@ public class Events implements Listener {
         event.setCancelled(true);
     }
 
-    public int getMaxInTeam(){
-        int onlinePlayerCount = Bukkit.getOnlinePlayers().size();
-        int teamCount = this.plugin.getConfig().getInt("arena.teams");
-        int playersPerTeam = this.plugin.getConfig().getInt("arena.playersPerTeam");
-        int max = (int) Math.ceil(((double)onlinePlayerCount)/teamCount);
-        if(max > playersPerTeam) return playersPerTeam;
-        return max;
-    }
-
-    public Material getMaterialFromResourceName(String resource){
-        if(resource.equalsIgnoreCase("IRON")){
-            return Material.IRON_INGOT;
-        }else if(resource.equalsIgnoreCase("GOLD")){
-            return Material.GOLD_INGOT;
-        }else if(resource.equalsIgnoreCase("DIAMOND")){
-            return Material.DIAMOND;
-        }else if(resource.equalsIgnoreCase("EMERALD")){
-            return Material.EMERALD;
-        }
-        return null;
-    }
-
-    public void setPlayersArmor(Player player){
-        int armor = this.plugin.getPlayerArmor(player);
-        PlayerInventory playerInventory = player.getInventory();
-        int team = plugin.getTeamOfPlayer(player);
-
-        ItemMeta im = null;
-        LeatherArmorMeta lam = null;
-        try {
-            ItemStack chestplate = new ItemStack(Material.LEATHER_CHESTPLATE);
-            im = chestplate.getItemMeta();
-            lam = (LeatherArmorMeta) im;
-            lam.setColor(this.plugin.getMenuInstance().getDyeColorOfNthTeam(team));
-            lam.setLore(Collections.singletonList(plugin.getConfig().getString("main.unDroppableLore")));
-            chestplate.setItemMeta(lam);
-            playerInventory.setChestplate(chestplate);
-
-            if(armor == 1){
-                //Leather brneni
-                ItemStack helmet = new ItemStack(Material.LEATHER_HELMET);
-                im = helmet.getItemMeta();
-                lam = (LeatherArmorMeta)im;
-                lam.setColor(this.plugin.getMenuInstance().getDyeColorOfNthTeam(team));
-                lam.setLore(Collections.singletonList(plugin.getConfig().getString("main.unDroppableLore")));
-                helmet.setItemMeta(lam);
-                playerInventory.setHelmet(helmet);
-
-                ItemStack leggings = new ItemStack(Material.LEATHER_LEGGINGS);
-                im = leggings.getItemMeta();
-                lam = (LeatherArmorMeta)im;
-                lam.setColor(this.plugin.getMenuInstance().getDyeColorOfNthTeam(team));
-                lam.setLore(Collections.singletonList(plugin.getConfig().getString("main.unDroppableLore")));
-                leggings.setItemMeta(lam);
-                playerInventory.setLeggings(leggings);
-
-                ItemStack boots = new ItemStack(Material.LEATHER_BOOTS);
-                im = boots.getItemMeta();
-                lam = (LeatherArmorMeta)im;
-                lam.setColor(this.plugin.getMenuInstance().getDyeColorOfNthTeam(team));
-                lam.setLore(Collections.singletonList(plugin.getConfig().getString("main.unDroppableLore")));
-                boots.setItemMeta(lam);
-                playerInventory.setBoots(boots);
-            }else if(armor == 2){
-                //Iron brneni
-                ItemStack helmet = new ItemStack(Material.IRON_HELMET);
-                im = helmet.getItemMeta();
-                im.setLore(Collections.singletonList(plugin.getConfig().getString("main.unDroppableLore")));
-                helmet.setItemMeta(im);
-                playerInventory.setHelmet(helmet);
-
-                ItemStack leggings = new ItemStack(Material.IRON_LEGGINGS);
-                im = leggings.getItemMeta();
-                im.setLore(Collections.singletonList(plugin.getConfig().getString("main.unDroppableLore")));
-                leggings.setItemMeta(im);
-                playerInventory.setLeggings(leggings);
-
-                ItemStack boots = new ItemStack(Material.IRON_BOOTS);
-                im = boots.getItemMeta();
-                im.setLore(Collections.singletonList(plugin.getConfig().getString("main.unDroppableLore")));
-                boots.setItemMeta(im);
-                playerInventory.setBoots(boots);
-            }else if(armor == 3){
-                //Diamond brneni
-                ItemStack helmet = new ItemStack(Material.DIAMOND_HELMET);
-                im = helmet.getItemMeta();
-                im.setLore(Collections.singletonList(plugin.getConfig().getString("main.unDroppableLore")));
-                helmet.setItemMeta(im);
-                playerInventory.setHelmet(helmet);
-
-                ItemStack leggings = new ItemStack(Material.DIAMOND_LEGGINGS);
-                im = leggings.getItemMeta();
-                im.setLore(Collections.singletonList(plugin.getConfig().getString("main.unDroppableLore")));
-                leggings.setItemMeta(im);
-                playerInventory.setLeggings(leggings);
-
-                ItemStack boots = new ItemStack(Material.DIAMOND_BOOTS);
-                im = boots.getItemMeta();
-                im.setLore(Collections.singletonList(plugin.getConfig().getString("main.unDroppableLore")));
-                boots.setItemMeta(im);
-                playerInventory.setBoots(boots);
-            }
-        }catch(Exception e){
-            e.printStackTrace();
-        }
-    }
-
-    public void processShopBoughtItem(Player player, int category, ItemStack clickedItem){
-        ItemStack itemToGive = clickedItem.clone();
-        if(category == 0){
-            //Armor - perma upgrade
-            int boughtArmor = 0;
-            if(itemToGive.getType() == Material.LEATHER_CHESTPLATE) boughtArmor = 1;
-            else if(itemToGive.getType() == Material.IRON_CHESTPLATE) boughtArmor = 2;
-            else if(itemToGive.getType() == Material.DIAMOND_CHESTPLATE) boughtArmor = 3;
-            this.plugin.setPlayerArmor(player, boughtArmor);
-            this.setPlayersArmor(player);
-        }else{
-            //Itemy na givnuti
-            ItemMeta im = itemToGive.getItemMeta();
-            im.setLore(null);
-            String displayName = im.getDisplayName();
-            if(displayName.contains("×")){
-                displayName = displayName.replaceFirst("\\d×[ ]*", "");
-                if(!displayName.substring(0, 1).equals("§")){
-                    displayName = "§f"+displayName;
-                }
-                im.setDisplayName(displayName);
-            }
-            itemToGive.setItemMeta(im);
-            player.getInventory().addItem(itemToGive);
-        }
-    }
-
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event){
         Player player = (Player) event.getWhoClicked();
@@ -393,7 +204,7 @@ public class Events implements Listener {
             event.setCancelled(true);
             player.closeInventory();
             //Neni tym plny? Tym balancer
-            int maxInTeam = getMaxInTeam();
+            int maxInTeam = this.plugin.getPlayerUtilsInstance().getMaxInTeam();
             if(this.plugin.getPlayersInTeam(slot).size() >= maxInTeam){
                 player.sendMessage(this.plugin.getPrefix()+this.plugin.getConfig().getString("main.teamIsFull"));
             }else {
@@ -416,7 +227,7 @@ public class Events implements Listener {
                 if(item == null || item.getType() == Material.AIR){
                     return; //kliknuto na prazdno, nic se nedeje
                 }
-                ArrayList<ItemStack> list = this.plugin.getMenuInstance().getShopCategoryListItems();
+                ArrayList<ItemStack> list = this.plugin.getShopUtilsInstance().getShopCategoryListItems();
                 for(int i=0; i<list.size(); i++){
                     ItemStack is = list.get(i);
                     if(i == slot){
@@ -424,7 +235,7 @@ public class Events implements Listener {
                     }
                     open.setItem(i, is);
                 }
-                ArrayList<ItemStack> goodsList = this.plugin.getMenuInstance().getShopCategoryItems(slot, player);
+                ArrayList<ItemStack> goodsList = this.plugin.getShopUtilsInstance().getShopCategoryItems(slot, player);
                 for(int i=9; i<45; i++){
                     int index = i-18;
                     if(index >= 0 && index < goodsList.size()) {
@@ -454,7 +265,7 @@ public class Events implements Listener {
                 if(selectedCategory == -1){
                     return; //neni selectnuta kategorie - divny, ale neresit
                 }
-                ArrayList<ItemStack> list = this.plugin.getMenuInstance().getShopCategoryItems(selectedCategory, player);
+                ArrayList<ItemStack> list = this.plugin.getShopUtilsInstance().getShopCategoryItems(selectedCategory, player);
                 int clickedItemSlot = slot-18;
                 try {
                     if(selectedCategory == 0){
@@ -475,7 +286,7 @@ public class Events implements Listener {
                     //Zkontrolovat, jestli hrac ma dostatek potrebnych itemu
                     ItemStack[] invContents = player.getInventory().getStorageContents();
                     int itemsLeft = priceNumber;
-                    Material neededMaterial = getMaterialFromResourceName(priceItem);
+                    Material neededMaterial = this.plugin.getPlayerUtilsInstance().getMaterialFromResourceName(priceItem);
                     for(ItemStack is : invContents){
                         if(is == null) continue;
                         if(is.getType() == neededMaterial){
@@ -487,9 +298,8 @@ public class Events implements Listener {
                             }
                         }
                     }
-                    player.sendMessage("§fCena: "+priceLine);
                     if(itemsLeft == 0){
-                        player.sendMessage("§aMas dostatek itemu na koupi");
+                        //Hrac ma dostatek itemu
                         //Sebrat itemy
                         int itemsToRemoveLeft = priceNumber;
                         for(ItemStack is : invContents){
@@ -508,9 +318,9 @@ public class Events implements Listener {
                             }
                         }
                         //Itemy odebrány, udělat správný nákup (přidat hráči to, co si koupil)
-                        this.processShopBoughtItem(player, selectedCategory, clickedItem);
+                        this.plugin.getShopUtilsInstance().processShopBoughtItem(player, selectedCategory, clickedItem);
                     }else{
-                        player.sendMessage("§cNa koupi ti chybi "+itemsLeft+"× "+neededMaterial.toString());
+                        player.sendMessage(this.plugin.getPrefix()+this.plugin.getConfig().getString("game.shopNotEnoughResources"));
                     }
                 }catch(Exception e){
                     e.printStackTrace();
@@ -530,7 +340,7 @@ public class Events implements Listener {
         if(this.plugin.getGameState() == GameState.INGAME){
             Location respawnLoc = plugin.teamSpawns.get(team);
             event.setRespawnLocation(respawnLoc);
-            this.setPlayersArmor(player);
+            this.plugin.getPlayerUtilsInstance().setPlayersArmor(player);
         }
     }
 
@@ -576,7 +386,7 @@ public class Events implements Listener {
         String line1 = sign.getLine(0);
         if(line1.toLowerCase().contains("shop")){
             //Je to cedulka shopu
-            this.plugin.getMenuInstance().openShopMenu(player);
+            this.plugin.getShopUtilsInstance().openShopMenu(player);
         }
     }
 

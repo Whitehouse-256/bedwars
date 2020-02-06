@@ -19,15 +19,16 @@ public class BedWars extends JavaPlugin {
     private GameState gameState = GameState.LOBBY;
     private int startTime;
     private Events eventsInstance;
-    private Menu menuInstance;
     private MyScoreboard myScoreboardInstance;
     private MapRegenerator mapRegeneratorInstance;
-    private HashMap<Integer, ArrayList<Player>> playerTeams = new HashMap<Integer, ArrayList<Player>>();
-    private HashMap<Integer, Boolean> teamBeds = new HashMap<Integer, Boolean>();
+    private PlayerUtils playerUtilsInstance;
+    private ShopUtils shopUtilsInstance;
+    private final HashMap<Integer, ArrayList<Player>> playerTeams = new HashMap<Integer, ArrayList<Player>>();
+    private final HashMap<Integer, Boolean> teamBeds = new HashMap<Integer, Boolean>();
     private BukkitRunnable gameLoop;
     private Random random;
-    public List<Location> teamSpawns = new ArrayList<Location>();
-    private HashMap<Player, Integer> playerArmor = new HashMap<Player, Integer>();
+    public final List<Location> teamSpawns = new ArrayList<Location>();
+    private final HashMap<Player, Integer> playerArmor = new HashMap<Player, Integer>();
 
     @Override
     public void onEnable() {
@@ -41,9 +42,10 @@ public class BedWars extends JavaPlugin {
         this.reloadConfig();
         PluginDescriptionFile pdfFile = this.getDescription();
         getLogger().info(pdfFile.getName()+" version "+pdfFile.getVersion()+" is enabled!");
-        this.menuInstance = new Menu(this);
         this.myScoreboardInstance = new MyScoreboard(this);
         this.mapRegeneratorInstance = new MapRegenerator(this);
+        this.playerUtilsInstance = new PlayerUtils(this);
+        this.shopUtilsInstance = new ShopUtils(this);
         this.random = new Random();
         this.myScoreboardInstance.setLine(0, "Lobby", "");
         this.myScoreboardInstance.setLine(1, "Pripojujte se", "");
@@ -63,10 +65,6 @@ public class BedWars extends JavaPlugin {
         return this.gameState;
     }
 
-    public Menu getMenuInstance(){
-        return this.menuInstance;
-    }
-
     public MyScoreboard getMyScoreboardInstance(){
         return this.myScoreboardInstance;
     }
@@ -77,6 +75,14 @@ public class BedWars extends JavaPlugin {
 
     public Events getEventsInstance(){
         return this.eventsInstance;
+    }
+
+    public PlayerUtils getPlayerUtilsInstance(){
+        return this.playerUtilsInstance;
+    }
+
+    public ShopUtils getShopUtilsInstance(){
+        return this.shopUtilsInstance;
     }
 
     private void startGameAndLoop(){
@@ -110,7 +116,7 @@ public class BedWars extends JavaPlugin {
             //Vsichni hraci jsou v nejakem tymu
             p.getInventory().clear();
             p.teleport(teamSpawns.get(team));
-            this.eventsInstance.setPlayersArmor(p);
+            this.playerUtilsInstance.setPlayersArmor(p);
             this.getMyScoreboardInstance().addPlayerToTeam(team, p);
             //Vycisten inventar a teleportovan
         }
@@ -121,7 +127,7 @@ public class BedWars extends JavaPlugin {
             boolean hasBed = (getPlayersInTeam(i-1).size() > 0);
             this.teamBeds.put(i-1, hasBed);
             String suffix = (hasBed ? getConfig().getString("game.charHasBed") : getConfig().getString("game.charEliminated"));
-            this.myScoreboardInstance.setLine(i, this.menuInstance.getNameOfNthTeam(i-1), suffix);
+            this.myScoreboardInstance.setLine(i, this.playerUtilsInstance.getNameOfNthTeam(i-1), suffix);
         }
         this.myScoreboardInstance.setLineCount(teamCount+1);
 
@@ -187,7 +193,7 @@ public class BedWars extends JavaPlugin {
                 for(int i=1; i<=teamCount; i++) {
                     boolean hasBed = teamBeds.get(i-1);
                     String suffix = (hasBed ? getConfig().getString("game.charHasBed") : (getPlayersInTeam(i-1).size()>0? " §e"+getPlayersInTeam(i-1).size() : getConfig().getString("game.charEliminated")));
-                    myScoreboardInstance.setLine(i, menuInstance.getNameOfNthTeam(i-1), suffix);
+                    myScoreboardInstance.setLine(i, playerUtilsInstance.getNameOfNthTeam(i-1), suffix);
                 }
                 //Spawnout vsechny itemy, co se maji spawnout
                 //base iron spawner - kazdych 10 ticku
@@ -327,7 +333,7 @@ public class BedWars extends JavaPlugin {
             if (i == team) this.addPlayerToTeam(i, player);
             else this.removePlayerFromTeam(i, player);
         }
-        player.sendMessage(getPrefix()+getConfig().getString("main.joinedTeam")+getMenuInstance().getNameOfNthTeam(team));
+        player.sendMessage(getPrefix()+getConfig().getString("main.joinedTeam")+playerUtilsInstance.getNameOfNthTeam(team));
     }
 
     public void enableSetup(){
@@ -343,8 +349,7 @@ public class BedWars extends JavaPlugin {
     }
 
     public int getPlayerArmor(Player player){
-        int armor = this.playerArmor.getOrDefault(player, 0);
-        return armor;
+        return this.playerArmor.getOrDefault(player, 0);
     }
 
     public void setPlayerArmor(Player player, int armor){
