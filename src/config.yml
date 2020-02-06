@@ -25,6 +25,63 @@ game:
   notStartingMessage: "Je tu nedostatek hracu, start byl odlozen."
   charHasBed: " §a§l✔"
   charEliminated: " §c§l✘"
+  shopMenuName: "§2Shop"
+shop:
+  categoryArmor: "§aBrneni"
+  categoryWeapons: "§cZbrane"
+  categoryBows: "§6Luky"
+  categoryBlocks: "§eBloky"
+  categoryTools: "§9Nastroje"
+  categorySpecial: "§dSpecialni"
+  names:
+    armor:
+      leather: "§6Kozene brneni"
+      iron: "§7Zelezne brneni"
+      diamond: "§bDiamantove brneni"
+    weapons:
+      stick: "§fMrdTycka"
+      sword1: "§eMec LVL 1"
+      sword2: "§eMec LVL 2"
+    bows:
+      bow1: "§bLuk LVL 1"
+      bow2: "§bLuk LVL 2"
+      four_arrows: "§f4× Sip"
+    blocks:
+      eight_wool: "§f8× Vlna"
+      eight_planks: "§68× Drevo"
+      four_endstone: "§e4× End Kamen"
+      obsidian: "§5Obsidian"
+    tools:
+      stone_pickaxe: "§7Kamenny krumpac"
+      diamond_pickaxe: "§bDiamantovy krumpac"
+      shears: "§fNuzky"
+    special:
+      fireball: "§cFireball"
+  prices:
+    armor:
+      leather: "gold,1"
+      iron: "gold,16"
+      diamond: "diamond,4"
+    weapons:
+      stick: "iron,16"
+      sword1: "gold,4"
+      sword2: "gold,12"
+    bows:
+      bow1: "gold,8"
+      bow2: "gold,24"
+      four_arrows: "gold,2"
+    blocks:
+      eight_wool: "iron,8"
+      eight_planks: "iron,24"
+      four_endstone: "gold,6"
+      obsidian: "emerald,1"
+    tools:
+      stone_pickaxe: "iron,32"
+      diamond_pickaxe: "diamond,4"
+      shears: "iron,24"
+    special:
+      fireball: "iron,32"
+
 arena:
   teams: 4
   playersPerTeam: 4

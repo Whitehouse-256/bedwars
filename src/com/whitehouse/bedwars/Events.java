@@ -2,6 +2,8 @@ package com.whitehouse.bedwars;
 
 import org.bukkit.*;
 import org.bukkit.block.Block;
+import org.bukkit.block.Sign;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.event.Listener;
@@ -10,6 +12,7 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.*;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.EntityType;
@@ -244,6 +247,14 @@ public class Events implements Listener {
         ItemStack item = event.getCurrentItem();
         int slot = event.getSlot();
         if(event.getView().getTitle().equals(this.plugin.getConfig().getString("main.teamSelectMenuName"))) {
+            //Otevreno menu pro vyber teamu
+            if(open == null){ //kliknuto mimo inventar
+                player.closeInventory();
+                return;
+            }
+            if(open.getType() == InventoryType.PLAYER){ //kliknuto do hracova inventare
+                return;
+            }
             //Je kliknuto v menu vyberu teamu
             int teamCount = this.plugin.getConfig().getInt("arena.teams");
             int playersPerTeam = this.plugin.getConfig().getInt("arena.playersPerTeam");
@@ -256,6 +267,71 @@ public class Events implements Listener {
                 player.sendMessage(this.plugin.getPrefix()+this.plugin.getConfig().getString("main.teamIsFull"));
             }else {
                 plugin.addPlayerToTeamAndRemoveFromOthers(slot, player);
+            }
+        }
+        if(event.getView().getTitle().equals(this.plugin.getConfig().getString("game.shopMenuName"))) {
+            //Otevren shop
+            if(open == null){ //kliknuto mimo inventar
+                player.closeInventory();
+                return;
+            }
+            if(open.getType() == InventoryType.PLAYER){ //kliknuto do hracova inventare
+                return;
+            }
+            //Je kliknuto v menu shopu
+            event.setCancelled(true);
+            if(slot < 9){
+                //Kliknuto na prvnich 9 slotu - vyber kategorie shopu
+                if(item == null || item.getType() == Material.AIR){
+                    return; //kliknuto na prazdno, nic se nedeje
+                }
+                ArrayList<ItemStack> list = this.plugin.getMenuInstance().getShopCategoryListItems();
+                for(int i=0; i<list.size(); i++){
+                    ItemStack is = list.get(i);
+                    if(i == slot){
+                        is.addUnsafeEnchantment(Enchantment.DURABILITY, 1);
+                    }
+                    open.setItem(i, is);
+                }
+                ArrayList<ItemStack> goodsList = this.plugin.getMenuInstance().getShopCategoryItems(slot, player);
+                for(int i=9; i<45; i++){
+                    int index = i-18;
+                    if(index >= 0 && index < goodsList.size()) {
+                        ItemStack is = goodsList.get(i - 18);
+                        open.setItem(i, is);
+                    } else {
+                        open.setItem(i, null);
+                    }
+                }
+            }else if(slot >= 18){
+                //Kliknuto na spravne itemy v shopu
+                if(item == null || item.getType() == Material.AIR){
+                    return; //kliknuto na prazdno, nic se nedeje
+                }
+                int i = 0;
+                ItemStack[] contents = open.getContents();
+                int size = contents.length;
+                int selectedCategory = -1;
+                while(i<9 && i<size){
+                    ItemStack itemStackInMenu = contents[i];
+                    if(itemStackInMenu.getEnchantmentLevel(Enchantment.DURABILITY) != 0){
+                        selectedCategory = i;
+                        break;
+                    }
+                    i++;
+                }
+                if(selectedCategory == -1){
+                    return; //neni selectnuta kategorie - divny, ale neresit
+                }
+                ArrayList<ItemStack> list = this.plugin.getMenuInstance().getShopCategoryItems(selectedCategory, player);
+                int clickedItemSlot = slot-18;
+                try {
+                    ItemStack clickedItem = list.get(clickedItemSlot);
+                    ItemMeta im = clickedItem.getItemMeta();
+                    List<String> lore = im.getLore();
+                    String priceLine = lore.get(lore.size()-1);
+                    player.sendMessage("§fCena: "+priceLine);
+                }catch(Exception e){/**/}
             }
         }
     }
@@ -295,4 +371,25 @@ public class Events implements Listener {
             }
         }
     }
+
+    @EventHandler
+    public void onClickOnSign(PlayerInteractEvent event){
+        Player player = event.getPlayer();
+        if(event.getAction() != Action.RIGHT_CLICK_BLOCK){
+            return;
+        }
+        //Hrac klikl na blok
+        Block block = event.getClickedBlock();
+        if(!block.getType().toString().contains("SIGN")){
+            return;
+        }
+        //Hrac klikl na cedulku
+        Sign sign = (Sign) block.getState();
+        String line1 = sign.getLine(0);
+        if(line1.toLowerCase().contains("shop")){
+            //Je to cedulka shopu
+            this.plugin.getMenuInstance().openShopMenu(player);
+        }
+    }
+
 }
