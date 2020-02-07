@@ -283,4 +283,12 @@ public class ShopUtils {
 
         player.openInventory(inv);
     }
+
+    public String getNameOfMaterial(Material material){
+        if(material.toString().contains("WOOL")) return plugin.getConfig().getString("shop.names.blocks.eight_wool").replaceFirst("\\d×[ ]*", "");
+        if(material == Material.OAK_PLANKS) return plugin.getConfig().getString("shop.names.blocks.eight_planks").replaceFirst("\\d×[ ]*", "");
+        if(material == Material.END_STONE) return plugin.getConfig().getString("shop.names.blocks.four_endstone").replaceFirst("\\d×[ ]*", "");
+        if(material == Material.OBSIDIAN) return plugin.getConfig().getString("shop.names.blocks.obsidian");
+        return null;
+    }
 }

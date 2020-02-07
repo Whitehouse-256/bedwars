@@ -8,6 +8,8 @@ import org.bukkit.entity.*;
 import org.bukkit.event.Listener;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.*;
@@ -344,22 +346,36 @@ public class Events implements Listener {
     public void onRespawn(PlayerRespawnEvent event){
         Player player = event.getPlayer();
         int team = plugin.getTeamOfPlayer(player);
-        if(this.plugin.getGameState() == GameState.INGAME){
-            Location respawnLoc = plugin.teamSpawns.get(team);
-            event.setRespawnLocation(respawnLoc);
-            this.plugin.getPlayerUtilsInstance().setPlayersArmor(player);
+        if (this.plugin.getGameState() == GameState.INGAME) {
+            if(this.plugin.teamHasBed(team)) {
+                Location respawnLoc = plugin.teamSpawns.get(team);
+                event.setRespawnLocation(respawnLoc);
+                this.plugin.getPlayerUtilsInstance().setPlayersArmor(player);
+            }else{
+                player.setGameMode(GameMode.SPECTATOR);
+                Location respawnLoc = plugin.teamSpawns.get(0);
+                event.setRespawnLocation(respawnLoc);
+            }
         }
     }
 
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event){ //dropovat pri smrti pouze dia a emeraldy
         Player player = event.getEntity();
+        int team = this.plugin.getTeamOfPlayer(player);
         List<ItemStack> drops = event.getDrops();
         for(int i=0; i < drops.size(); i++){
             if(drops.get(i) == null) continue;
             if(drops.get(i).getType() != Material.DIAMOND && drops.get(i).getType() != Material.EMERALD){
                 drops.set(i, null);
             }
+        }
+        if(!this.plugin.teamHasBed(team)){
+            String message = this.plugin.getConfig().getString("game.playerEliminated")
+                    .replace("%player%", player.getName())
+                    .replace("%playerColor%", plugin.getPlayerUtilsInstance().getColorOfNthTeam(team).toString());
+            Bukkit.broadcastMessage(this.plugin.getPrefix()+message);
+            this.plugin.setPlayerToSpectator(player);
         }
     }
 
@@ -385,6 +401,7 @@ public class Events implements Listener {
         }
         //Hrac klikl na blok
         Block block = event.getClickedBlock();
+        if(block == null) return;
         if(!block.getType().toString().contains("SIGN")){
             return;
         }
@@ -403,12 +420,92 @@ public class Events implements Listener {
             return;
         }
         //je to fireball
+        if(this.plugin.getGameState() != GameState.INGAME){
+            return;
+        }
+        //hra je spustena
         Block hitBlock = event.getHitBlock();
         if(hitBlock == null){
             hitBlock = Objects.requireNonNull(event.getHitEntity()).getLocation().getBlock();
         }
         //vzit bloky v okoli a znicit je
         hitBlock.getWorld().playEffect(hitBlock.getLocation(), Effect.SMOKE, 0);
+        int blockX = hitBlock.getX();
+        int blockY = hitBlock.getY();
+        int blockZ = hitBlock.getZ();
+        for (int x = blockX - 1; x <= blockX + 1; x++) {
+            for (int y = blockY - 1; y <= blockY + 1; y++) {
+                for (int z = blockZ - 1; z <= blockZ + 1; z++) {
+                    Block toDelete = hitBlock.getWorld().getBlockAt(x, y, z);
+                    if(plugin.getBlockBuildingInstance().containsBlock(toDelete)){
+                        toDelete.setType(Material.AIR);
+                    }
+                }
+            }
+        }
+    }
+
+    @EventHandler
+    public void onBlockPlace(BlockPlaceEvent event){
+        Player player = event.getPlayer();
+        if(this.plugin.getGameState() == GameState.INGAME) {
+            this.plugin.getBlockBuildingInstance().addBlock(event.getBlockPlaced());
+        } else {
+            if(player.getGameMode() != GameMode.CREATIVE) event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onBlockBreak(BlockBreakEvent event){
+        Block block = event.getBlock();
+        Player player = event.getPlayer();
+        if(this.plugin.getGameState() == GameState.INGAME) {
+            if (block.getType().toString().contains("BED")) {
+                int team = this.plugin.getPlayerUtilsInstance().getTeamByBedBlock(block);
+                int playersTeam = this.plugin.getTeamOfPlayer(player);
+                if (team == -1) {
+                    //je to random postel
+                    event.setCancelled(true);
+                } else if (team == playersTeam) {
+                    //je to postel tymu hrace - nemuze znicit svou
+                    event.setCancelled(true);
+                    player.sendMessage(plugin.getPrefix() + plugin.getConfig().getString("game.cannotDestroyOwnBed"));
+                } else {
+                    //je to postel jineho tymu - znicit, pokud je vubec team ve hre
+                    if (this.plugin.teamHasBed(team)) {
+                        event.setDropItems(false);
+                        plugin.destroyTeamBed(team);
+                        String message = plugin.getConfig().getString("game.bedDestroyed")
+                                .replace("%player%", player.getName())
+                                .replace("%destroyedTeam%", plugin.getPlayerUtilsInstance().getNameOfNthTeam(team))
+                                .replace("%playerColor%", plugin.getPlayerUtilsInstance().getColorOfNthTeam(playersTeam).toString());
+                        Bukkit.broadcastMessage(plugin.getPrefix() + message);
+                    }else{
+                        event.setCancelled(true);
+                    }
+                }
+            } else {
+                //neni to postel
+                if (!plugin.getBlockBuildingInstance().containsBlock(block)) {
+                    //tento blok nebyl postaven hracem
+                    event.setCancelled(true);
+                }
+            }
+        } else {
+            if(player.getGameMode() != GameMode.CREATIVE) event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onItemSpawn(ItemSpawnEvent event){
+        Item item = event.getEntity();
+        ItemStack is = item.getItemStack();
+        ItemMeta im = is.getItemMeta();
+        if(im != null) {
+            im.setDisplayName(this.plugin.getShopUtilsInstance().getNameOfMaterial(is.getType()));
+            is.setItemMeta(im);
+        }
+        item.setItemStack(is);
     }
 
 }

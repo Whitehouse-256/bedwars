@@ -28,6 +28,9 @@ game:
   shopMenuName: "§2Shop"
   shopAlreadyHaveArmor: "§cMuzes si koupit pouze lepsi brneni!"
   shopNotEnoughResources: "§cNemas dostatek itemu ke koupi!"
+  cannotDestroyOwnBed: "§cNemuzes znicit svoji postel!"
+  bedDestroyed: "§7Hrac %playerColor%%player% §7znicil postel tymu %destroyedTeam%§7."
+  playerEliminated: "§7Hrac %playerColor%%player% §7byl §celiminovan§7."
 shop:
   categoryArmor: "§aBrneni"
   categoryWeapons: "§cZbrane"

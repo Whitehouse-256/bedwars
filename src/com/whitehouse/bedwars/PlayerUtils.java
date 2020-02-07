@@ -1,6 +1,7 @@
 package com.whitehouse.bedwars;
 
 import org.bukkit.*;
+import org.bukkit.block.Block;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Fireball;
 import org.bukkit.entity.Player;
@@ -12,6 +13,7 @@ import org.bukkit.inventory.meta.LeatherArmorMeta;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Objects;
 
 public class PlayerUtils {
     private final BedWars plugin;
@@ -260,6 +262,25 @@ public class PlayerUtils {
         fireball.setShooter(player);
         fireball.setIsIncendiary(false);
         fireball.setYield(0F);
+    }
+
+    public int getTeamByBedBlock(Block block){
+        int teamCount = this.plugin.getConfig().getInt("arena.teams");
+        for(int i=0; i<teamCount; i++) {
+            try {
+                String bedCoords = this.plugin.getConfig().getString("arena.beds." + i);
+                String[] coordsXYZ = Objects.requireNonNull(bedCoords).split(";");
+                int x = Integer.parseInt(coordsXYZ[0]);
+                int y = Integer.parseInt(coordsXYZ[1]);
+                int z = Integer.parseInt(coordsXYZ[2]);
+                int distSq = (block.getX()-x)*(block.getX()-x) + (block.getY()-y)*(block.getY()-y) + (block.getZ()-z)*(block.getZ()-z);
+                if(distSq <= 1){
+                    //je to postel daneho tymu
+                    return i;
+                }
+            }catch (Exception e){e.printStackTrace();}
+        }
+        return -1;
     }
 
 }

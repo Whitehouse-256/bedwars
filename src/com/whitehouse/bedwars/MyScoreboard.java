@@ -1,10 +1,13 @@
 package com.whitehouse.bedwars;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.*;
 
 import java.util.ArrayList;
+import java.util.Objects;
+import java.util.Set;
 
 public class MyScoreboard {
 
@@ -59,7 +62,29 @@ public class MyScoreboard {
         }
         Team rightTeam = this.globalSidebarScoreboard.getTeam("team"+team);
         rightTeam.setColor(plugin.getPlayerUtilsInstance().getColorOfNthTeam(team));
+        rightTeam.setAllowFriendlyFire(false);
         //rightTeam.setPrefix(plugin.getMenuInstance().getColorOfNthTeam(team)+" "); //pokud by se chtel davat i prefix
+        rightTeam.addEntry(player.getName());
+    }
+
+    public void removePlayerFromAllTeams(Player player){
+        Set<Team> teams = this.globalSidebarScoreboard.getTeams();
+        for(Team team : teams){
+            if(team.hasEntry(player.getName())){
+                team.removeEntry(player.getName());
+            }
+        }
+    }
+
+    public void addPlayerToSpectatorTeam(Player player){
+        if(this.globalSidebarScoreboard.getTeam("teamSpec") == null){
+            try {
+                this.globalSidebarScoreboard.registerNewTeam("teamSpec");
+            }catch(Exception e){/*divna vec, ale ok*/}
+        }
+        Team rightTeam = this.globalSidebarScoreboard.getTeam("teamSpec");
+        Objects.requireNonNull(rightTeam).setColor(ChatColor.GRAY);
+        rightTeam.setPrefix("§8§lSPEC §o");
         rightTeam.addEntry(player.getName());
     }
 

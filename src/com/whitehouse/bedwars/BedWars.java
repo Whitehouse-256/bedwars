@@ -23,6 +23,7 @@ public class BedWars extends JavaPlugin {
     private MapRegenerator mapRegeneratorInstance;
     private PlayerUtils playerUtilsInstance;
     private ShopUtils shopUtilsInstance;
+    private BlockBuilding blockBuildingInstance;
     private final HashMap<Integer, ArrayList<Player>> playerTeams = new HashMap<Integer, ArrayList<Player>>();
     private final HashMap<Integer, Boolean> teamBeds = new HashMap<Integer, Boolean>();
     private BukkitRunnable gameLoop;
@@ -46,6 +47,7 @@ public class BedWars extends JavaPlugin {
         this.mapRegeneratorInstance = new MapRegenerator(this);
         this.playerUtilsInstance = new PlayerUtils(this);
         this.shopUtilsInstance = new ShopUtils(this);
+        this.blockBuildingInstance = new BlockBuilding(this);
         this.random = new Random();
         this.myScoreboardInstance.setLine(0, "Lobby", "");
         this.myScoreboardInstance.setLine(1, "Pripojujte se", "");
@@ -83,6 +85,10 @@ public class BedWars extends JavaPlugin {
 
     public ShopUtils getShopUtilsInstance(){
         return this.shopUtilsInstance;
+    }
+
+    public BlockBuilding getBlockBuildingInstance(){
+        return this.blockBuildingInstance;
     }
 
     private void startGameAndLoop(){
@@ -336,6 +342,15 @@ public class BedWars extends JavaPlugin {
         player.sendMessage(getPrefix()+getConfig().getString("main.joinedTeam")+playerUtilsInstance.getNameOfNthTeam(team));
     }
 
+    public void setPlayerToSpectator(Player player){
+        int teamCount = this.getConfig().getInt("arena.teams");
+        for (int i = 0; i < teamCount; i++) {
+            this.removePlayerFromTeam(i, player);
+        }
+        this.myScoreboardInstance.removePlayerFromAllTeams(player);
+        this.myScoreboardInstance.addPlayerToSpectatorTeam(player);
+    }
+
     public void enableSetup(){
         this.gameState = GameState.SETUP;
     }
@@ -346,6 +361,10 @@ public class BedWars extends JavaPlugin {
 
     public boolean teamHasBed(int team){
         return this.teamBeds.getOrDefault(team, false);
+    }
+
+    public void destroyTeamBed(int team){
+        this.teamBeds.put(team, false);
     }
 
     public int getPlayerArmor(Player player){
