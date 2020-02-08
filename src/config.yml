@@ -24,6 +24,8 @@ main:
   scoreboardStartingLines:
     - "Zacatek za: |§a%seconds% §fsekund%suffix%"
   gameStartingIn: "Hra zacina za §9%seconds% §asekund%suffix%!"
+  joinBroadcastMessage: "§7Hrac §f%player% §7se §apripojil do hry §7(%online%/%max%)!"
+  quitBroadcastMessage: "§7Hrac §f%playerColor%%player% §7se §codpojil ze hry §7(%online%/%max%)!"
   chatFormatLobby: "§7%player% §e§l» §f%message%"
   chatFormatIngameTeam: "%playerColor%§lTEAM§r %playerColor%%player% §7§l» §f%message%"
   chatFormatIngameAll: "§f§lALL§r %playerColor%%player% §7§l» §f%message%"

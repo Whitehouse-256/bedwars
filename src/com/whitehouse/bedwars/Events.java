@@ -52,15 +52,36 @@ public class Events implements Listener {
     public void onJoin(PlayerJoinEvent event){
         Player player = event.getPlayer();
         this.plugin.getPlayerUtilsInstance().handlePlayerJoin(player);
+        int playersOnline = Bukkit.getOnlinePlayers().size();
+        int teamCount = this.plugin.getConfig().getInt("arena.teams");
+        int playersPerTeam = this.plugin.getConfig().getInt("arena.playersPerTeam");
+        int maxPlayers = teamCount*playersPerTeam;
+        String joinMessage = Objects.requireNonNull(plugin.getConfig().getString("main.joinBroadcastMessage"))
+                .replace("%player%", player.getName())
+                .replace("%online%", String.valueOf(playersOnline))
+                .replace("%max%", String.valueOf(maxPlayers));
+        event.setJoinMessage(joinMessage);
     }
 
     @EventHandler
     public void onQuit(PlayerQuitEvent event){
-        int teamCount = this.plugin.getConfig().getInt("arena.teams");
         Player player = event.getPlayer();
+        int teamCount = this.plugin.getConfig().getInt("arena.teams");
+        int playersOnline = Bukkit.getOnlinePlayers().size()-1;
+        int playersPerTeam = this.plugin.getConfig().getInt("arena.playersPerTeam");
+        int maxPlayers = teamCount*playersPerTeam;
+        int team = plugin.getTeamOfPlayer(player);
+        String color = this.plugin.getPlayerUtilsInstance().getColorOfNthTeam(team).toString();
+        String quitMessage = Objects.requireNonNull(plugin.getConfig().getString("main.quitBroadcastMessage"))
+                .replace("%playerColor%", color)
+                .replace("%player%", player.getName())
+                .replace("%online%", String.valueOf(playersOnline))
+                .replace("%max%", String.valueOf(maxPlayers));
+        event.setQuitMessage(quitMessage);
         for (int i = 0; i < teamCount; i++) {
             this.plugin.removePlayerFromTeam(i, player);
         }
+        plugin.getMyScoreboardInstance().removePlayerFromAllTeams(player);
         plugin.checkEndGame();
     }
 

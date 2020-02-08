@@ -25,13 +25,24 @@ public class BedWars extends JavaPlugin {
     public final List<Location> teamSpawns = new ArrayList<>();
     private final HashMap<Player, Integer> playerArmor = new HashMap<>();
 
+    private void setLobbyScoreboard(){
+        List<String> lines = Objects.requireNonNull(getConfig().getStringList("main.scoreboardLobbyLines"));
+        for(int i=0; i<lines.size(); i++){
+            String line = lines.get(i);
+            if(!line.contains("|")) line += "|";
+            String[] prefSuf = line.split("[|]", 2);
+            this.myScoreboardInstance.setLine(i, prefSuf[0], prefSuf[1]);
+        }
+        this.myScoreboardInstance.setLineCount(lines.size());
+    }
+
     @Override
     public void onEnable() {
         PluginManager pm = getServer().getPluginManager();
         //eventy
         Events eventsInstance = new Events(this);
         pm.registerEvents(eventsInstance, this);
-        //prikazy - TBD
+        //prikazy
         Objects.requireNonNull(getCommand("bw-setup")).setExecutor(new SetupCommand(this));
         this.saveDefaultConfig();
         this.reloadConfig();
@@ -43,14 +54,7 @@ public class BedWars extends JavaPlugin {
         this.shopUtilsInstance = new ShopUtils(this);
         this.blockBuildingInstance = new BlockBuilding();
         this.random = new Random();
-        List<String> lines = Objects.requireNonNull(getConfig().getStringList("main.scoreboardLobbyLines"));
-        for(int i=0; i<lines.size(); i++){
-            String line = lines.get(i);
-            if(!line.contains("|")) line += "|";
-            String[] prefSuf = line.split("[|]", 2);
-            this.myScoreboardInstance.setLine(i, prefSuf[0], prefSuf[1]);
-        }
-        this.myScoreboardInstance.setLineCount(lines.size());
+        setLobbyScoreboard();
     }
 
     @Override
@@ -122,6 +126,7 @@ public class BedWars extends JavaPlugin {
             p.getInventory().clear();
             p.teleport(teamSpawns.get(team));
             this.playerUtilsInstance.setPlayersArmor(p);
+            myScoreboardInstance.removePlayerFromAllTeams(p);
             this.getMyScoreboardInstance().addPlayerToTeam(team, p);
             //Vycisten inventar a teleportovan
         }
@@ -287,7 +292,8 @@ public class BedWars extends JavaPlugin {
             List<String> lines = Objects.requireNonNull(getConfig().getStringList("main.scoreboardStartingLines"));
             for(int i=0; i<lines.size(); i++){
                 String line = lines.get(i)
-                        .replace("%seconds%", String.valueOf(this.startTime));
+                        .replace("%seconds%", String.valueOf(this.startTime))
+                        .replace("%suffix%", PlayerUtils.sklon(this.startTime, "u", "y", ""));
                 if(!line.contains("|")) line += "|";
                 String[] prefSuf = line.split("[|]", 2);
                 this.myScoreboardInstance.setLine(i, prefSuf[0], prefSuf[1]);
@@ -332,12 +338,13 @@ public class BedWars extends JavaPlugin {
                         String[] prefSuf = line.split("[|]", 2);
                         myScoreboardInstance.setLine(i, prefSuf[0], prefSuf[1]);
                     }
+                    myScoreboardInstance.setLineCount(lines.size());
                 }
             }.runTaskTimer(this, 20, 20);
         }else{
             this.gameState = GameState.LOBBY;
             Bukkit.broadcastMessage(getPrefix()+getConfig().getString("game.notStartingMessage"));
-            this.myScoreboardInstance.setLine(0, "Lobby", "");
+            setLobbyScoreboard();
         }
     }
 
@@ -393,6 +400,8 @@ public class BedWars extends JavaPlugin {
             if (i == team) this.addPlayerToTeam(i, player);
             else this.removePlayerFromTeam(i, player);
         }
+        myScoreboardInstance.removePlayerFromAllTeams(player);
+        myScoreboardInstance.addPlayerToTeam(team, player);
         player.sendMessage(getPrefix()+getConfig().getString("main.joinedTeam")+playerUtilsInstance.getNameOfNthTeam(team));
     }
 
@@ -483,6 +492,8 @@ public class BedWars extends JavaPlugin {
                     for(Player p : onlinePlayers) {
                         getPlayerUtilsInstance().handlePlayerJoin(p);
                     }
+                    //nastavit lobby scoreboard
+                    setLobbyScoreboard();
                     this.cancel();
                     return;
                 }
