@@ -14,14 +14,13 @@ public class MyScoreboard {
     private final BedWars plugin;
     private final Scoreboard globalSidebarScoreboard;
     private final Objective obj;
-    private final ArrayList<Team> lines = new ArrayList<Team>();
-    private Objective teamColorsObj = null;
+    private final ArrayList<Team> lines = new ArrayList<>();
 
     public MyScoreboard(BedWars plugin){
         this.plugin = plugin;
-        ScoreboardManager manager = Bukkit.getScoreboardManager();
+        ScoreboardManager manager = Objects.requireNonNull(Bukkit.getScoreboardManager());
         globalSidebarScoreboard = manager.getNewScoreboard();
-        obj = globalSidebarScoreboard.registerNewObjective("myscoreboard", "dummy", plugin.getConfig().getString("main.scoreboardLobbyName"));
+        obj = globalSidebarScoreboard.registerNewObjective("myscoreboard", "dummy", Objects.requireNonNull(plugin.getConfig().getString("main.scoreboardLobbyName")));
         obj.setDisplaySlot(DisplaySlot.SIDEBAR);
         for(int i=0; i<9; i++){
             Score thisLine = obj.getScore("§"+i);
@@ -60,7 +59,7 @@ public class MyScoreboard {
                 this.globalSidebarScoreboard.registerNewTeam("team" + team);
             }catch(Exception e){/*divna vec, ale ok*/}
         }
-        Team rightTeam = this.globalSidebarScoreboard.getTeam("team"+team);
+        Team rightTeam = Objects.requireNonNull(this.globalSidebarScoreboard.getTeam("team"+team));
         rightTeam.setColor(plugin.getPlayerUtilsInstance().getColorOfNthTeam(team));
         rightTeam.setAllowFriendlyFire(false);
         //rightTeam.setPrefix(plugin.getMenuInstance().getColorOfNthTeam(team)+" "); //pokud by se chtel davat i prefix

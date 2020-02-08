@@ -36,9 +36,9 @@ public class PlayerUtils {
         player.getInventory().clear();
         ItemStack teamSelector = new ItemStack(Material.RED_BED);
         try {
-            ItemMeta im = teamSelector.getItemMeta();
+            ItemMeta im = Objects.requireNonNull(teamSelector.getItemMeta());
             im.setDisplayName(this.plugin.getConfig().getString("main.teamSelectorName"));
-            ArrayList<String> lore = new ArrayList<String>();
+            ArrayList<String> lore = new ArrayList<>();
             lore.add(this.plugin.getConfig().getString("main.unDroppableLore"));
             im.setLore(lore);
             teamSelector.setItemMeta(im);
@@ -79,8 +79,7 @@ public class PlayerUtils {
         int teamCount = this.plugin.getConfig().getInt("arena.teams");
         int playersPerTeam = this.plugin.getConfig().getInt("arena.playersPerTeam");
         int max = (int) Math.ceil(((double)onlinePlayerCount)/teamCount);
-        if(max > playersPerTeam) return playersPerTeam;
-        return max;
+        return Math.min(max, playersPerTeam);
     }
 
     public Material getMaterialFromResourceName(String resource){
@@ -101,14 +100,16 @@ public class PlayerUtils {
         PlayerInventory playerInventory = player.getInventory();
         int team = plugin.getTeamOfPlayer(player);
 
-        ItemMeta im = null;
-        LeatherArmorMeta lam = null;
+        ItemMeta im;
+        LeatherArmorMeta lam;
         try {
             ItemStack chestplate = new ItemStack(Material.LEATHER_CHESTPLATE);
             im = chestplate.getItemMeta();
             lam = (LeatherArmorMeta) im;
-            lam.setColor(this.getDyeColorOfNthTeam(team));
-            lam.setLore(Collections.singletonList(plugin.getConfig().getString("main.unDroppableLore")));
+            if (lam != null) {
+                lam.setColor(this.getDyeColorOfNthTeam(team));
+                lam.setLore(Collections.singletonList(plugin.getConfig().getString("main.unDroppableLore")));
+            }
             chestplate.setItemMeta(lam);
             playerInventory.setChestplate(chestplate);
 
@@ -117,62 +118,80 @@ public class PlayerUtils {
                 ItemStack helmet = new ItemStack(Material.LEATHER_HELMET);
                 im = helmet.getItemMeta();
                 lam = (LeatherArmorMeta)im;
-                lam.setColor(this.getDyeColorOfNthTeam(team));
-                lam.setLore(Collections.singletonList(plugin.getConfig().getString("main.unDroppableLore")));
+                if (lam != null) {
+                    lam.setColor(this.getDyeColorOfNthTeam(team));
+                    lam.setLore(Collections.singletonList(plugin.getConfig().getString("main.unDroppableLore")));
+                }
                 helmet.setItemMeta(lam);
                 playerInventory.setHelmet(helmet);
 
                 ItemStack leggings = new ItemStack(Material.LEATHER_LEGGINGS);
                 im = leggings.getItemMeta();
                 lam = (LeatherArmorMeta)im;
-                lam.setColor(this.getDyeColorOfNthTeam(team));
-                lam.setLore(Collections.singletonList(plugin.getConfig().getString("main.unDroppableLore")));
+                if (lam != null) {
+                    lam.setColor(this.getDyeColorOfNthTeam(team));
+                    lam.setLore(Collections.singletonList(plugin.getConfig().getString("main.unDroppableLore")));
+                }
                 leggings.setItemMeta(lam);
                 playerInventory.setLeggings(leggings);
 
                 ItemStack boots = new ItemStack(Material.LEATHER_BOOTS);
                 im = boots.getItemMeta();
                 lam = (LeatherArmorMeta)im;
-                lam.setColor(this.getDyeColorOfNthTeam(team));
-                lam.setLore(Collections.singletonList(plugin.getConfig().getString("main.unDroppableLore")));
+                if (lam != null) {
+                    lam.setColor(this.getDyeColorOfNthTeam(team));
+                    lam.setLore(Collections.singletonList(plugin.getConfig().getString("main.unDroppableLore")));
+                }
                 boots.setItemMeta(lam);
                 playerInventory.setBoots(boots);
             }else if(armor == 2){
                 //Iron brneni
                 ItemStack helmet = new ItemStack(Material.IRON_HELMET);
                 im = helmet.getItemMeta();
-                im.setLore(Collections.singletonList(plugin.getConfig().getString("main.unDroppableLore")));
+                if (im != null) {
+                    im.setLore(Collections.singletonList(plugin.getConfig().getString("main.unDroppableLore")));
+                }
                 helmet.setItemMeta(im);
                 playerInventory.setHelmet(helmet);
 
                 ItemStack leggings = new ItemStack(Material.IRON_LEGGINGS);
                 im = leggings.getItemMeta();
-                im.setLore(Collections.singletonList(plugin.getConfig().getString("main.unDroppableLore")));
+                if (im != null) {
+                    im.setLore(Collections.singletonList(plugin.getConfig().getString("main.unDroppableLore")));
+                }
                 leggings.setItemMeta(im);
                 playerInventory.setLeggings(leggings);
 
                 ItemStack boots = new ItemStack(Material.IRON_BOOTS);
                 im = boots.getItemMeta();
-                im.setLore(Collections.singletonList(plugin.getConfig().getString("main.unDroppableLore")));
+                if (im != null) {
+                    im.setLore(Collections.singletonList(plugin.getConfig().getString("main.unDroppableLore")));
+                }
                 boots.setItemMeta(im);
                 playerInventory.setBoots(boots);
             }else if(armor == 3){
                 //Diamond brneni
                 ItemStack helmet = new ItemStack(Material.DIAMOND_HELMET);
                 im = helmet.getItemMeta();
-                im.setLore(Collections.singletonList(plugin.getConfig().getString("main.unDroppableLore")));
+                if (im != null) {
+                    im.setLore(Collections.singletonList(plugin.getConfig().getString("main.unDroppableLore")));
+                }
                 helmet.setItemMeta(im);
                 playerInventory.setHelmet(helmet);
 
                 ItemStack leggings = new ItemStack(Material.DIAMOND_LEGGINGS);
                 im = leggings.getItemMeta();
-                im.setLore(Collections.singletonList(plugin.getConfig().getString("main.unDroppableLore")));
+                if (im != null) {
+                    im.setLore(Collections.singletonList(plugin.getConfig().getString("main.unDroppableLore")));
+                }
                 leggings.setItemMeta(im);
                 playerInventory.setLeggings(leggings);
 
                 ItemStack boots = new ItemStack(Material.DIAMOND_BOOTS);
                 im = boots.getItemMeta();
-                im.setLore(Collections.singletonList(plugin.getConfig().getString("main.unDroppableLore")));
+                if (im != null) {
+                    im.setLore(Collections.singletonList(plugin.getConfig().getString("main.unDroppableLore")));
+                }
                 boots.setItemMeta(im);
                 playerInventory.setBoots(boots);
             }
@@ -230,18 +249,18 @@ public class PlayerUtils {
     }
 
     public void openTeamSelectMenu(Player player){
-        Inventory inv = Bukkit.createInventory(null, 9, this.plugin.getConfig().getString("main.teamSelectMenuName"));
-        ItemMeta im = null;
+        Inventory inv = Bukkit.createInventory(null, 9, Objects.requireNonNull(this.plugin.getConfig().getString("main.teamSelectMenuName")));
+        ItemMeta im;
         //Vytvorit jednotlive itemy pro tymy
         int teamCount = this.plugin.getConfig().getInt("arena.teams");
         int playersPerTeam = this.plugin.getConfig().getInt("arena.playersPerTeam");
         for(int i=0; i<teamCount; i++){
             ItemStack wool = new ItemStack(getWoolOfNthTeam(i));
-            im = wool.getItemMeta();
+            im = Objects.requireNonNull(wool.getItemMeta());
             ArrayList<Player> playersInTeam = this.plugin.getPlayersInTeam(i);
             int playersInTeamCount = playersInTeam.size();
             im.setDisplayName(getNameOfNthTeam(i)+" "+playersInTeamCount+"/"+playersPerTeam);
-            ArrayList<String> lore = new ArrayList<String>();
+            ArrayList<String> lore = new ArrayList<>();
             for(Player p : playersInTeam){
                 lore.add("§f- "+p.getName());
             }
@@ -257,7 +276,7 @@ public class PlayerUtils {
     public void shootFireball(Player player){
         Location eye = player.getEyeLocation();
         Location loc = eye.add(eye.getDirection().multiply(1.2));
-        Fireball fireball = (Fireball) loc.getWorld().spawnEntity(loc, EntityType.FIREBALL);
+        Fireball fireball = (Fireball) Objects.requireNonNull(loc.getWorld()).spawnEntity(loc, EntityType.FIREBALL);
         fireball.setVelocity(loc.getDirection().multiply(2));
         fireball.setShooter(player);
         fireball.setIsIncendiary(false);
@@ -281,6 +300,12 @@ public class PlayerUtils {
             }catch (Exception e){e.printStackTrace();}
         }
         return -1;
+    }
+
+    public static String sklon(int pocet, String p1, String p234, String p5){
+        if(pocet == 1) return p1;
+        if(pocet >= 2 && pocet <= 4) return p234;
+        return p5;
     }
 
 }

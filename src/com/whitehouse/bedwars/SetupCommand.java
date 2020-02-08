@@ -1,6 +1,5 @@
 package com.whitehouse.bedwars;
 
-import com.sun.javaws.exceptions.InvalidArgumentException;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
@@ -11,7 +10,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Objects;
 
 public class SetupCommand implements CommandExecutor {
     private final BedWars plugin;
@@ -47,20 +46,20 @@ public class SetupCommand implements CommandExecutor {
             player.getInventory().clear();
             for(int i=0; i<8; i++){
                 ItemStack wool = new ItemStack(this.plugin.getPlayerUtilsInstance().getWoolOfNthTeam(i));
-                ItemMeta im = wool.getItemMeta();
+                ItemMeta im = Objects.requireNonNull(wool.getItemMeta());
                 im.setDisplayName("Nastavit postel pro: "+this.plugin.getPlayerUtilsInstance().getNameOfNthTeam(i)+" §2§lRCLICK");
                 wool.setItemMeta(im);
                 player.getInventory().addItem(wool);
             }
             ItemStack switcher = new ItemStack(Material.RED_BED);
-            ItemMeta im = switcher.getItemMeta();
+            ItemMeta im = Objects.requireNonNull(switcher.getItemMeta());
             im.setDisplayName("§f§nNastaveni postele§r §2§l RCLICK >>");
             switcher.setItemMeta(im);
             player.getInventory().addItem(switcher);
             return true;
         }else{
             if(args[0].equalsIgnoreCase("teams")){
-                int num = 0;
+                int num;
                 try{
                     num = Integer.parseInt(args[1]);
                     if(num < 2 || num > 8) throw new Exception("Invalid argument range!");
@@ -73,7 +72,7 @@ public class SetupCommand implements CommandExecutor {
                 return true;
             }
             if(args[0].equalsIgnoreCase("playersPerTeam")){
-                int num = 0;
+                int num;
                 try{
                     num = Integer.parseInt(args[1]);
                     if(num < 1 || num > 32) throw new Exception("Invalid argument range!");
@@ -89,7 +88,7 @@ public class SetupCommand implements CommandExecutor {
                 this.plugin.disableSetup();
                 this.plugin.getConfig().set("main.runSetup", false);
                 this.plugin.saveConfig();
-                ArrayList<Player> onlinePlayers = new ArrayList<Player>(Bukkit.getOnlinePlayers());
+                ArrayList<Player> onlinePlayers = new ArrayList<>(Bukkit.getOnlinePlayers());
                 for(Player p : onlinePlayers) {
                     this.plugin.getPlayerUtilsInstance().handlePlayerJoin(p);
                 }
@@ -99,61 +98,77 @@ public class SetupCommand implements CommandExecutor {
                 ItemStack[] invCont = player.getInventory().getStorageContents();
                 if(invCont[8] != null){
                     try {
-                        if (invCont[8].getItemMeta().getDisplayName().contains("Nastaveni postele")) {
+                        if (Objects.requireNonNull(invCont[8].getItemMeta()).getDisplayName().contains("Nastaveni postele")) {
                             //posunout na dalsi nastaveni
                             player.getInventory().clear();
                             for(int i=0; i<8; i++){
                                 ItemStack wool = new ItemStack(this.plugin.getPlayerUtilsInstance().getWoolOfNthTeam(i));
                                 ItemMeta im = wool.getItemMeta();
-                                im.setDisplayName("Nastavit spawn pro: "+this.plugin.getPlayerUtilsInstance().getNameOfNthTeam(i)+" §2§lRCLICK");
+                                if (im != null) {
+                                    im.setDisplayName("Nastavit spawn pro: "+this.plugin.getPlayerUtilsInstance().getNameOfNthTeam(i)+" §2§lRCLICK");
+                                }
                                 wool.setItemMeta(im);
                                 player.getInventory().addItem(wool);
                             }
                             ItemStack switcher = new ItemStack(Material.NETHER_STAR);
                             ItemMeta im = switcher.getItemMeta();
-                            im.setDisplayName("§f§nNastaveni spawnu§r §2§l RCLICK >>");
+                            if (im != null) {
+                                im.setDisplayName("§f§nNastaveni spawnu§r §2§l RCLICK >>");
+                            }
                             switcher.setItemMeta(im);
                             player.getInventory().addItem(switcher);
                         }
                         else if (invCont[8].getItemMeta().getDisplayName().contains("Nastaveni spawnu")) {
                             //posunout na dalsi nastaveni
-                            ItemMeta im = null;
+                            ItemMeta im;
                             player.getInventory().clear();
 
                             ItemStack it1 = new ItemStack(Material.IRON_INGOT);
                             im = it1.getItemMeta();
-                            im.setDisplayName("Pridat spawn na irony §2§lRCLICK");
+                            if (im != null) {
+                                im.setDisplayName("Pridat spawn na irony §2§lRCLICK");
+                            }
                             it1.setItemMeta(im);
                             player.getInventory().addItem(it1);
 
                             ItemStack it2 = new ItemStack(Material.GOLD_INGOT);
                             im = it2.getItemMeta();
-                            im.setDisplayName("Pridat spawn na goldy §2§lRCLICK");
+                            if (im != null) {
+                                im.setDisplayName("Pridat spawn na goldy §2§lRCLICK");
+                            }
                             it2.setItemMeta(im);
                             player.getInventory().addItem(it2);
 
                             ItemStack it3 = new ItemStack(Material.DIAMOND);
                             im = it3.getItemMeta();
-                            im.setDisplayName("Pridat spawn na diamanty §2§lRCLICK");
+                            if (im != null) {
+                                im.setDisplayName("Pridat spawn na diamanty §2§lRCLICK");
+                            }
                             it3.setItemMeta(im);
                             player.getInventory().addItem(it3);
 
                             ItemStack it4 = new ItemStack(Material.CHICKEN_SPAWN_EGG);
                             im = it4.getItemMeta();
-                            im.setDisplayName("Nastavit lobby §2§lRCLICK");
+                            if (im != null) {
+                                im.setDisplayName("Nastavit lobby §2§lRCLICK");
+                            }
                             it4.setItemMeta(im);
                             player.getInventory().addItem(it4);
 
                             for(int i=0; i<4; i++){
                                 ItemStack span = new ItemStack(Material.BARRIER);
                                 im = span.getItemMeta();
-                                im.setDisplayName("(nic)§"+i);
+                                if (im != null) {
+                                    im.setDisplayName("(nic)§"+i);
+                                }
                                 span.setItemMeta(im);
                                 player.getInventory().addItem(span);
                             }
                             ItemStack switcher = new ItemStack(Material.GOLD_NUGGET);
                             im = switcher.getItemMeta();
-                            im.setDisplayName("§f§nOstatni nastaveni§r §2§l RCLICK >>");
+                            if (im != null) {
+                                im.setDisplayName("§f§nOstatni nastaveni§r §2§l RCLICK >>");
+                            }
                             switcher.setItemMeta(im);
                             player.getInventory().addItem(switcher);
                         }
@@ -163,13 +178,17 @@ public class SetupCommand implements CommandExecutor {
                             for(int i=0; i<8; i++){
                                 ItemStack wool = new ItemStack(this.plugin.getPlayerUtilsInstance().getWoolOfNthTeam(i));
                                 ItemMeta im = wool.getItemMeta();
-                                im.setDisplayName("Nastavit postel pro: "+this.plugin.getPlayerUtilsInstance().getNameOfNthTeam(i)+" §2§lRCLICK");
+                                if (im != null) {
+                                    im.setDisplayName("Nastavit postel pro: "+this.plugin.getPlayerUtilsInstance().getNameOfNthTeam(i)+" §2§lRCLICK");
+                                }
                                 wool.setItemMeta(im);
                                 player.getInventory().addItem(wool);
                             }
                             ItemStack switcher = new ItemStack(Material.RED_BED);
                             ItemMeta im = switcher.getItemMeta();
-                            im.setDisplayName("§f§nNastaveni postele§r §2§l RCLICK >>");
+                            if (im != null) {
+                                im.setDisplayName("§f§nNastaveni postele§r §2§l RCLICK >>");
+                            }
                             switcher.setItemMeta(im);
                             player.getInventory().addItem(switcher);
                         }

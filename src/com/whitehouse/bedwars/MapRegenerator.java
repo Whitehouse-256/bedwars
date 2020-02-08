@@ -15,11 +15,12 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Objects;
 import java.util.Scanner;
 
 public class MapRegenerator {
     private final BedWars plugin;
-    private final ArrayList<BlockState> mapData = new ArrayList<BlockState>();
+    private final ArrayList<BlockState> mapData = new ArrayList<>();
     private Location bound1;
     private Location bound2;
 
@@ -68,11 +69,12 @@ public class MapRegenerator {
 
         if(player != null) player.sendMessage(plugin.getPrefix()+"§aZacinam ukladat bloky do seznamu. Toto muze chvili trvat...");
 
+        World world = Objects.requireNonNull(bound1.getWorld());
         for(int y=min_y; y<=max_y; y++){
             for(int x=min_x; x<=max_x; x++){
                 for(int z=min_z; z<=max_z; z++){
                     //Pro kazdy blok postupne
-                    BlockState blockState = bound1.getWorld().getBlockAt(x, y, z).getState();
+                    BlockState blockState = world.getBlockAt(x, y, z).getState();
                     this.mapData.add(blockState);
                 }
             }
@@ -82,7 +84,7 @@ public class MapRegenerator {
     }
 
     public void saveMap(@Nullable Player player){
-        ArrayList<BlockState> localCopy = new ArrayList<BlockState>(this.mapData);
+        ArrayList<BlockState> localCopy = new ArrayList<>(this.mapData);
         BedWars localPlugin = this.plugin;
         File dir = this.plugin.getDataFolder();
         if(player != null) player.sendMessage(plugin.getPrefix()+"§aVytvarim nove vlakno pro ulozeni bloku do souboru. Toto muze chvili trvat...");
@@ -136,7 +138,7 @@ public class MapRegenerator {
         if(player != null) player.sendMessage(plugin.getPrefix()+"§aVytvarim vlakno pro pokus o obnoveni mapy ze souboru. Toto muze chvili trvat...");
         Thread thread = new Thread(){
             public void run(){
-                ArrayList<ConcreteBlockState> localList = new ArrayList<ConcreteBlockState>();
+                ArrayList<ConcreteBlockState> localList = new ArrayList<>();
                 try {
                     File dataFile = new File(dir, "arenaBlocks.csv");
                     Scanner sc = new Scanner(dataFile);
@@ -165,8 +167,8 @@ public class MapRegenerator {
                         @Override
                         public void run() {
                             //zkopirovat data do main threadu a tam pokracovat
-                            ArrayList<ConcreteBlockState> bedHeads = new ArrayList<ConcreteBlockState>();
-                            ArrayList<ConcreteBlockState> bedFoots = new ArrayList<ConcreteBlockState>();
+                            ArrayList<ConcreteBlockState> bedHeads = new ArrayList<>();
+                            ArrayList<ConcreteBlockState> bedFoots = new ArrayList<>();
                             if(player != null) player.sendMessage(localPlugin.getPrefix()+"§aNacteno "+localList.size()+" bloku ze souboru!");
                             //v druhem threadu se k datum v localList uz nepristupuje, je to tedy bezpecne tady v main threadu
                             World world = Bukkit.getWorld("world");

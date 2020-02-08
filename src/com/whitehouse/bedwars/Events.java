@@ -5,6 +5,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.block.Action;
@@ -22,7 +23,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-@SuppressWarnings("unused")
 public class Events implements Listener {
     private final BedWars plugin;
 
@@ -38,13 +38,13 @@ public class Events implements Listener {
     @EventHandler
     public void beforeJoin(AsyncPlayerPreLoginEvent event){
         if(!this.plugin.getGameState().isJoinable()){
-            event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, plugin.getConfig().getString("main.cannotJoinMessage"));
+            event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, Objects.requireNonNull(plugin.getConfig().getString("main.cannotJoinMessage")));
         }
         int teamCount = this.plugin.getConfig().getInt("arena.teams");
         int playersPerTeam = this.plugin.getConfig().getInt("arena.playersPerTeam");
         int maxPlayers = teamCount*playersPerTeam;
         if(Bukkit.getOnlinePlayers().size() >= maxPlayers){
-            event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_FULL, plugin.getConfig().getString("main.serverFullMessage"));
+            event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_FULL, Objects.requireNonNull(plugin.getConfig().getString("main.serverFullMessage")));
         }
     }
 
@@ -103,7 +103,7 @@ public class Events implements Listener {
                 ItemStack[] invCont = player.getInventory().getStorageContents();
                 if(invCont[8] != null){
                     try{
-                        String name = invCont[8].getItemMeta().getDisplayName();
+                        String name = Objects.requireNonNull(invCont[8].getItemMeta()).getDisplayName();
                         int slot = player.getInventory().getHeldItemSlot();
                         if(name.contains("Nastaveni postele")){
                             //Nastavit postel pro tym (slot)
@@ -169,15 +169,17 @@ public class Events implements Listener {
         Item it = event.getItemDrop();
         ItemStack is = it.getItemStack();
         ItemMeta im = is.getItemMeta();
+        if(im == null) return;
         try {
-            ArrayList<String> lore = new ArrayList<String>(im.getLore());
+            if(!im.hasLore()) return;
+            ArrayList<String> lore = new ArrayList<>(Objects.requireNonNull(im.getLore()));
             for (String line : lore) {
-                if (line.contains(this.plugin.getConfig().getString("main.soulBoundLore"))) {
+                if (line.contains(Objects.requireNonNull(this.plugin.getConfig().getString("main.soulBoundLore")))) {
                     it.remove();
                     pl.playSound(pl.getLocation(), Sound.ENTITY_BLAZE_HURT, 1, 1);
                     break;
                 }
-                if(line.contains(this.plugin.getConfig().getString("main.unDroppableLore"))){
+                if(line.contains(Objects.requireNonNull(this.plugin.getConfig().getString("main.unDroppableLore")))){
                     event.setCancelled(true);
                     break;
                 }
@@ -195,7 +197,6 @@ public class Events implements Listener {
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event){
         Player player = (Player) event.getWhoClicked();
-        ClickType click = event.getClick();
         Inventory open = event.getClickedInventory();
         ItemStack item = event.getCurrentItem();
         int slot = event.getSlot();
@@ -210,7 +211,6 @@ public class Events implements Listener {
             }
             //Je kliknuto v menu vyberu teamu
             int teamCount = this.plugin.getConfig().getInt("arena.teams");
-            int playersPerTeam = this.plugin.getConfig().getInt("arena.playersPerTeam");
             if(slot >= teamCount) return; //kliknuto mimo vlny - ignorovat
             event.setCancelled(true);
             player.closeInventory();
@@ -289,8 +289,11 @@ public class Events implements Listener {
                     }
                     ItemStack clickedItem = list.get(clickedItemSlot);
                     ItemMeta im = clickedItem.getItemMeta();
+                    if(im == null || !im.hasLore()){
+                        return; //kliknuto na item bez ceny, nic nedelat
+                    }
                     List<String> lore = im.getLore();
-                    String priceLine = lore.get(lore.size()-1);
+                    String priceLine = Objects.requireNonNull(lore).get(lore.size()-1);
                     String[] priceSplit = priceLine.split(" ");
                     int priceNumber = Integer.parseInt(priceSplit[0].substring(2));
                     String priceItem = priceSplit[1];
@@ -371,6 +374,29 @@ public class Events implements Listener {
     public void onPlayerDeath(PlayerDeathEvent event){ //dropovat pri smrti pouze dia a emeraldy
         Player player = event.getEntity();
         int team = this.plugin.getTeamOfPlayer(player);
+        String color = this.plugin.getPlayerUtilsInstance().getColorOfNthTeam(team).toString();
+        String oldMsg = event.getDeathMessage();
+        if(oldMsg == null) oldMsg = "";
+        String newMsg;
+        if(oldMsg.contains("was slain by")){
+            String killer = oldMsg.substring(oldMsg.indexOf("was slain by ")+"was slain by ".length());
+            killer = killer.substring(0, killer.indexOf(" "));
+            String killerColor = "§8";
+            try{
+                Player killerPlayer = Bukkit.getPlayer(killer);
+                killerColor = this.plugin.getPlayerUtilsInstance().getColorOfNthTeam(this.plugin.getTeamOfPlayer(killerPlayer)).toString();
+            }catch (Exception e){/*neni to hrac*/}
+            newMsg = Objects.requireNonNull(plugin.getConfig().getString("game.playerKilledBy"))
+                    .replace("%victimColor%", color)
+                    .replace("%victim%", player.getName())
+                    .replace("%killerColor%", killerColor)
+                    .replace("%killer%", killer);
+        }else{
+            newMsg = Objects.requireNonNull(plugin.getConfig().getString("game.playerDied"))
+                    .replace("%victimColor%", color)
+                    .replace("%victim%", player.getName());
+        }
+        event.setDeathMessage(newMsg);
         List<ItemStack> drops = event.getDrops();
         for(int i=0; i < drops.size(); i++){
             if(drops.get(i) == null) continue;
@@ -379,13 +405,23 @@ public class Events implements Listener {
             }
         }
         if(!this.plugin.teamHasBed(team)){
-            String message = this.plugin.getConfig().getString("game.playerEliminated")
+            String message = Objects.requireNonNull(this.plugin.getConfig().getString("game.playerEliminated"))
                     .replace("%player%", player.getName())
                     .replace("%playerColor%", plugin.getPlayerUtilsInstance().getColorOfNthTeam(team).toString());
             Bukkit.broadcastMessage(this.plugin.getPrefix()+message);
             this.plugin.setPlayerToSpectator(player);
             plugin.checkEndGame();
         }
+        new BukkitRunnable(){
+            @Override
+            public void run() {
+                if(player.isDead()){
+                    player.spigot().respawn();
+                    this.cancel();
+                }
+            }
+        }.runTaskTimer(plugin, 1, 1);
+        //player.spigot().respawn();
     }
 
     @EventHandler
@@ -395,7 +431,7 @@ public class Events implements Listener {
             Entity attacker = event.getDamager();
             if(attacker.getType() == EntityType.PLAYER){ //utoci hrac na hrace
                 Player attackerPlayer = (Player) attacker;
-                if(player.getHealth()<=0){ //zabil ho
+                if(player.getHealth()-event.getFinalDamage()<=0){ //zabil ho
                     attackerPlayer.getInventory().addItem(new ItemStack(Material.EMERALD));
                 }
             }
@@ -447,7 +483,9 @@ public class Events implements Listener {
                 for (int z = blockZ - 1; z <= blockZ + 1; z++) {
                     Block toDelete = hitBlock.getWorld().getBlockAt(x, y, z);
                     if(plugin.getBlockBuildingInstance().containsBlock(toDelete)){
-                        toDelete.setType(Material.AIR);
+                        if(toDelete.getType() != Material.OBSIDIAN) {
+                            toDelete.setType(Material.AIR);
+                        }
                     }
                 }
             }
@@ -484,15 +522,15 @@ public class Events implements Listener {
                     if (this.plugin.teamHasBed(team)) {
                         event.setDropItems(false);
                         plugin.destroyTeamBed(team);
-                        String message = plugin.getConfig().getString("game.bedDestroyed")
+                        String message = Objects.requireNonNull(plugin.getConfig().getString("game.bedDestroyed"))
                                 .replace("%player%", player.getName())
                                 .replace("%destroyedTeam%", plugin.getPlayerUtilsInstance().getNameOfNthTeam(team))
                                 .replace("%playerColor%", plugin.getPlayerUtilsInstance().getColorOfNthTeam(playersTeam).toString());
                         Bukkit.broadcastMessage(plugin.getPrefix() + message);
                         ArrayList<Player> victimPlayers = plugin.getPlayersInTeam(team);
                         for(Player p : victimPlayers){
-                            p.sendTitle(plugin.getConfig().getString("game.destroyedYourBedTitle"), plugin.getConfig().getString("game.destroyedYourBedSubTitle"), 0, 35, 10);
-                            p.playSound(p.getLocation(), Sound.ENTITY_ENDER_DRAGON_GROWL, 1f, 0.5f);
+                            p.sendTitle(plugin.getConfig().getString("game.destroyedYourBedTitle"), plugin.getConfig().getString("game.destroyedYourBedSubTitle"), 0, 45, 15);
+                            p.playSound(p.getLocation(), Sound.ENTITY_ENDER_DRAGON_GROWL, 1f, 0.8f);
                         }
                     }else{
                         event.setCancelled(true);
@@ -526,6 +564,45 @@ public class Events implements Listener {
     public void onPickup(EntityPickupItemEvent event){
         if(plugin.getGameState() != GameState.INGAME){
             event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onAsyncPlayerChat(AsyncPlayerChatEvent event){
+        event.setCancelled(true);
+        Player player = event.getPlayer();
+        String msg = event.getMessage();
+        if(plugin.getGameState() != GameState.INGAME){
+            String format = Objects.requireNonNull(plugin.getConfig().getString("main.chatFormatLobby"))
+                    .replace("%player%", player.getName())
+                    .replace("%message%", msg);
+            Bukkit.broadcastMessage(format);
+        }else{
+            int team = plugin.getTeamOfPlayer(player);
+            if(team < 0){
+                //hrac neni ve hre - je spec - chat mu nepujde
+                return;
+            }
+            String color = this.plugin.getPlayerUtilsInstance().getColorOfNthTeam(team).toString();
+            //ingame
+            if(msg.charAt(0) == '!'){
+                //all chat
+                String format = Objects.requireNonNull(plugin.getConfig().getString("main.chatFormatIngameAll"))
+                        .replace("%playerColor%", color)
+                        .replace("%player%", player.getName())
+                        .replace("%message%", msg.substring(1));
+                Bukkit.broadcastMessage(format);
+            }else{
+                //team chat
+                String format = Objects.requireNonNull(plugin.getConfig().getString("main.chatFormatIngameTeam"))
+                        .replace("%playerColor%", color)
+                        .replace("%player%", player.getName())
+                        .replace("%message%", msg);
+                List<Player> playersInTeam = plugin.getPlayersInTeam(team);
+                for(Player p : playersInTeam){
+                    p.sendMessage(format);
+                }
+            }
         }
     }
 

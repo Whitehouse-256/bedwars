@@ -1,14 +1,11 @@
 package com.whitehouse.bedwars;
 
-import org.bukkit.GameMode;
-import org.bukkit.Location;
-import org.bukkit.Material;
+import org.bukkit.*;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.*;
 import org.bukkit.plugin.java.*;
-import org.bukkit.Bukkit;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.*;
@@ -17,27 +14,25 @@ public class BedWars extends JavaPlugin {
 
     private GameState gameState = GameState.LOBBY;
     private int startTime;
-    private Events eventsInstance;
     private MyScoreboard myScoreboardInstance;
     private MapRegenerator mapRegeneratorInstance;
     private PlayerUtils playerUtilsInstance;
     private ShopUtils shopUtilsInstance;
     private BlockBuilding blockBuildingInstance;
-    private final HashMap<Integer, ArrayList<Player>> playerTeams = new HashMap<Integer, ArrayList<Player>>();
-    private final HashMap<Integer, Boolean> teamBeds = new HashMap<Integer, Boolean>();
-    private BukkitRunnable gameLoop;
+    private final HashMap<Integer, ArrayList<Player>> playerTeams = new HashMap<>();
+    private final HashMap<Integer, Boolean> teamBeds = new HashMap<>();
     private Random random;
-    public final List<Location> teamSpawns = new ArrayList<Location>();
-    private final HashMap<Player, Integer> playerArmor = new HashMap<Player, Integer>();
+    public final List<Location> teamSpawns = new ArrayList<>();
+    private final HashMap<Player, Integer> playerArmor = new HashMap<>();
 
     @Override
     public void onEnable() {
         PluginManager pm = getServer().getPluginManager();
         //eventy
-        this.eventsInstance = new Events(this);
-        pm.registerEvents(this.eventsInstance, this);
+        Events eventsInstance = new Events(this);
+        pm.registerEvents(eventsInstance, this);
         //prikazy - TBD
-        getCommand("bw-setup").setExecutor(new SetupCommand(this));
+        Objects.requireNonNull(getCommand("bw-setup")).setExecutor(new SetupCommand(this));
         this.saveDefaultConfig();
         this.reloadConfig();
         PluginDescriptionFile pdfFile = this.getDescription();
@@ -46,11 +41,16 @@ public class BedWars extends JavaPlugin {
         this.mapRegeneratorInstance = new MapRegenerator(this);
         this.playerUtilsInstance = new PlayerUtils(this);
         this.shopUtilsInstance = new ShopUtils(this);
-        this.blockBuildingInstance = new BlockBuilding(this);
+        this.blockBuildingInstance = new BlockBuilding();
         this.random = new Random();
-        this.myScoreboardInstance.setLine(0, "Lobby", "");
-        this.myScoreboardInstance.setLine(1, "Pripojujte se", "");
-        this.myScoreboardInstance.setLineCount(2);
+        List<String> lines = Objects.requireNonNull(getConfig().getStringList("main.scoreboardLobbyLines"));
+        for(int i=0; i<lines.size(); i++){
+            String line = lines.get(i);
+            if(!line.contains("|")) line += "|";
+            String[] prefSuf = line.split("[|]", 2);
+            this.myScoreboardInstance.setLine(i, prefSuf[0], prefSuf[1]);
+        }
+        this.myScoreboardInstance.setLineCount(lines.size());
     }
 
     @Override
@@ -74,10 +74,6 @@ public class BedWars extends JavaPlugin {
         return this.mapRegeneratorInstance;
     }
 
-    public Events getEventsInstance(){
-        return this.eventsInstance;
-    }
-
     public PlayerUtils getPlayerUtilsInstance(){
         return this.playerUtilsInstance;
     }
@@ -99,19 +95,23 @@ public class BedWars extends JavaPlugin {
         //List<Location> resourceSpawners_teamSpawns = new ArrayList<Location>();
         teamSpawns.clear();
         for(int i=0; i<teamCount; i++){
-            String loc = getConfig().getString("arena.spawn."+i);
-            String[] split = loc.split(";");
-            double x = Double.parseDouble(split[0]);
-            double y = Double.parseDouble(split[1]);
-            double z = Double.parseDouble(split[2]);
-            float yaw = Float.parseFloat(split[3]);
-            float pitch = Float.parseFloat(split[4]);
-            Location location = new Location(Bukkit.getWorld("world"), x, y, z, yaw, pitch);
-            teamSpawns.add(location);
+            try {
+                String loc = getConfig().getString("arena.spawn." + i);
+                String[] split = Objects.requireNonNull(loc).split(";");
+                double x = Double.parseDouble(split[0]);
+                double y = Double.parseDouble(split[1]);
+                double z = Double.parseDouble(split[2]);
+                float yaw = Float.parseFloat(split[3]);
+                float pitch = Float.parseFloat(split[4]);
+                Location location = new Location(Bukkit.getWorld("world"), x, y, z, yaw, pitch);
+                teamSpawns.add(location);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
         }
 
         //Dat vsechny hrace do nejakeho tymu, pak jim smazat inv a teleportovat je na team spawn
-        ArrayList<Player> onlinePlayers = new ArrayList<Player>(Bukkit.getOnlinePlayers());
+        ArrayList<Player> onlinePlayers = new ArrayList<>(Bukkit.getOnlinePlayers());
         for(Player p : onlinePlayers){
             int team = getTeamOfPlayer(p);
             if(team == -1){ //hrac neni v tymu
@@ -133,7 +133,7 @@ public class BedWars extends JavaPlugin {
         }
 
         //Udelat scoreboard:
-        this.myScoreboardInstance.setLine(0, "Arena je ve ", "§fhre");
+        this.myScoreboardInstance.setLine(0, "", "");
         for(int i=1; i<=teamCount; i++) {
             boolean hasBed = (getPlayersInTeam(i-1).size() > 0);
             this.teamBeds.put(i-1, hasBed);
@@ -148,7 +148,7 @@ public class BedWars extends JavaPlugin {
          */
 
         //Spawner: iron
-        List<Location> resourceSpawners_2 = new ArrayList<Location>();
+        List<Location> resourceSpawners_2 = new ArrayList<>();
         List<String> listFromConfig = getConfig().getStringList("arena.resources.iron");
         for(String s : listFromConfig){
             String[] split = s.split(";");
@@ -160,7 +160,7 @@ public class BedWars extends JavaPlugin {
         }
 
         //Spawner: gold
-        List<Location> resourceSpawners_3 = new ArrayList<Location>();
+        List<Location> resourceSpawners_3 = new ArrayList<>();
         listFromConfig = getConfig().getStringList("arena.resources.gold");
         for(String s : listFromConfig){
             String[] split = s.split(";");
@@ -172,7 +172,7 @@ public class BedWars extends JavaPlugin {
         }
 
         //Spawner: diamond
-        List<Location> resourceSpawners_4 = new ArrayList<Location>();
+        List<Location> resourceSpawners_4 = new ArrayList<>();
         listFromConfig = getConfig().getStringList("arena.resources.diamond");
         for(String s : listFromConfig){
             String[] split = s.split(";");
@@ -185,11 +185,27 @@ public class BedWars extends JavaPlugin {
 
         //Spustit game loop
         this.startTime = 0;
-        this.gameLoop = new BukkitRunnable() {
+        //private long startTime = 0;
+        //Vypnout game loop kdyz se prerusi hra
+        //kazdych 10 ticku projde tato funkce
+        //Game Loop:
+        //Checknout konec hry pro jistotu
+        //kazde 2 sekundy
+        //Updatovani scoreboardu
+        //Spawnout vsechny itemy, co se maji spawnout
+        //base iron spawner - kazdych 10 ticku
+        //radius 2
+        //base gold spawner - kazdych 100 ticku
+        //radius 2
+        //iron spawner - kazdych 20 ticku
+        //List<String> spawnerList1 = getConfig().getStringList();
+        //gold spawner - kazdych 40 ticku
+        //diamond spawner - kazdych 300 ticku
+        BukkitRunnable gameLoop = new BukkitRunnable() {
             //private long startTime = 0;
             @Override
             public void run() {
-                if(getGameState() != GameState.INGAME){
+                if (getGameState() != GameState.INGAME) {
                     //Vypnout game loop kdyz se prerusi hra
                     this.cancel();
                     return;
@@ -197,64 +213,69 @@ public class BedWars extends JavaPlugin {
                 startTime++; //kazdych 10 ticku projde tato funkce
                 //Game Loop:
                 //Checknout konec hry pro jistotu
-                if(startTime % 4 == 0){ //kazde 2 sekundy
+                if (startTime % 4 == 0) { //kazde 2 sekundy
                     checkEndGame();
                 }
                 //Updatovani scoreboardu
-                int seconds = startTime/2;
-                int minutes = seconds/60;
-                seconds -= minutes*60;
-                myScoreboardInstance.setLine(0, "Hra bezi uz: ", String.format("§a%02d:%02d", minutes, seconds));
-                for(int i=1; i<=teamCount; i++) {
-                    boolean hasBed = teamBeds.get(i-1);
-                    String suffix = (hasBed ? getConfig().getString("game.charHasBed") : (getPlayersInTeam(i-1).size()>0? " §e"+getPlayersInTeam(i-1).size() : getConfig().getString("game.charEliminated")));
-                    myScoreboardInstance.setLine(i, playerUtilsInstance.getNameOfNthTeam(i-1), suffix);
+                int seconds = startTime / 2;
+                int minutes = seconds / 60;
+                seconds -= minutes * 60;
+                String firstLine = Objects.requireNonNull(getConfig().getString("game.scoreboardFirstLineIngame"))
+                        .replace("%time%", String.format("%02d:%02d", minutes, seconds));
+                if(!firstLine.contains("|")) firstLine += "|";
+                String[] prefSuf = firstLine.split("[|]", 2);
+                myScoreboardInstance.setLine(0, prefSuf[0], prefSuf[1]);
+                for (int i = 1; i <= teamCount; i++) {
+                    boolean hasBed = teamBeds.get(i - 1);
+                    String suffix = (hasBed ? getConfig().getString("game.charHasBed") : (getPlayersInTeam(i - 1).size() > 0 ? " §e" + getPlayersInTeam(i - 1).size() : getConfig().getString("game.charEliminated")));
+                    myScoreboardInstance.setLine(i, playerUtilsInstance.getNameOfNthTeam(i - 1), suffix);
                 }
                 //Spawnout vsechny itemy, co se maji spawnout
+                World world = Objects.requireNonNull(teamSpawns.get(0).getWorld());
                 //base iron spawner - kazdych 10 ticku
-                for(Location l : teamSpawns){
+                for (Location l : teamSpawns) {
                     Location loc = l.clone();
-                    loc.add(2*random.nextDouble()-1.0, 0, 2*random.nextDouble()-1.0); //radius 2
+                    loc.add(2 * random.nextDouble() - 1.0, 0, 2 * random.nextDouble() - 1.0); //radius 2
                     ItemStack is = new ItemStack(Material.IRON_INGOT);
-                    loc.getWorld().dropItem(loc, is);
+                    world.dropItem(loc, is);
                 }
                 //base gold spawner - kazdych 100 ticku
-                if(startTime % 10 == 0){
-                    for(Location l : teamSpawns){
+                if (startTime % 10 == 0) {
+                    for (Location l : teamSpawns) {
                         Location loc = l.clone();
-                        loc.add(2*random.nextDouble()-1.0, 0, 2*random.nextDouble()-1.0); //radius 2
+                        loc.add(2 * random.nextDouble() - 1.0, 0, 2 * random.nextDouble() - 1.0); //radius 2
                         ItemStack is = new ItemStack(Material.GOLD_INGOT);
-                        loc.getWorld().dropItem(loc, is);
+                        world.dropItem(loc, is);
                     }
                 }
                 //iron spawner - kazdych 20 ticku
-                if(startTime % 2 == 0){
-                    for(Location l : resourceSpawners_2){
+                if (startTime % 2 == 0) {
+                    for (Location l : resourceSpawners_2) {
                         Location loc = l.clone();
                         ItemStack is = new ItemStack(Material.IRON_INGOT);
-                        loc.getWorld().dropItemNaturally(loc, is);
+                        world.dropItemNaturally(loc, is);
                     }
                 }
                 //List<String> spawnerList1 = getConfig().getStringList();
                 //gold spawner - kazdych 40 ticku
-                if(startTime % 4 == 0){
-                    for(Location l : resourceSpawners_3){
+                if (startTime % 4 == 0) {
+                    for (Location l : resourceSpawners_3) {
                         Location loc = l.clone();
                         ItemStack is = new ItemStack(Material.GOLD_INGOT);
-                        loc.getWorld().dropItemNaturally(loc, is);
+                        world.dropItemNaturally(loc, is);
                     }
                 }
                 //diamond spawner - kazdych 300 ticku
-                if(startTime % 30 == 0){
-                    for(Location l : resourceSpawners_4){
+                if (startTime % 30 == 0) {
+                    for (Location l : resourceSpawners_4) {
                         Location loc = l.clone();
                         ItemStack is = new ItemStack(Material.DIAMOND);
-                        loc.getWorld().dropItemNaturally(loc, is);
+                        world.dropItemNaturally(loc, is);
                     }
                 }
             }
         };
-        this.gameLoop.runTaskTimer(this, 10, 10);
+        gameLoop.runTaskTimer(this, 10, 10);
     }
 
     public void setGameStarting(boolean starting){
@@ -262,8 +283,16 @@ public class BedWars extends JavaPlugin {
             this.gameState = GameState.STARTING;
             Bukkit.broadcastMessage(getPrefix()+getConfig().getString("game.startingMessage"));
             this.startTime = getConfig().getInt("game.startTime");
-            this.myScoreboardInstance.setLine(0, "Zacatek za: ", "§a"+this.startTime+" §fsekund");
-            this.myScoreboardInstance.setLineCount(1);
+            //Scoreboard
+            List<String> lines = Objects.requireNonNull(getConfig().getStringList("main.scoreboardStartingLines"));
+            for(int i=0; i<lines.size(); i++){
+                String line = lines.get(i)
+                        .replace("%seconds%", String.valueOf(this.startTime));
+                if(!line.contains("|")) line += "|";
+                String[] prefSuf = line.split("[|]", 2);
+                this.myScoreboardInstance.setLine(i, prefSuf[0], prefSuf[1]);
+            }
+            this.myScoreboardInstance.setLineCount(lines.size());
             //Spustit casovac
             new BukkitRunnable(){
                 @Override
@@ -281,14 +310,28 @@ public class BedWars extends JavaPlugin {
                     }
                     startTime--;
                     if(startTime == 0){
-                        Bukkit.broadcastMessage(getPrefix()+"Hra zacala");
+                        Bukkit.broadcastMessage(getPrefix()+Objects.requireNonNull(getConfig().getString("game.gameStarted")));
                         gameState = GameState.INGAME;
                         startGameAndLoop();
                         this.cancel();
                         return;
                     }
-                    Bukkit.broadcastMessage(getPrefix()+"Hra zacne za "+startTime+" sekund!");
-                    myScoreboardInstance.setLine(0, "Zacatek za: ", "§a"+startTime+" §fsekund");
+                    if(startTime % 5 == 0 || startTime < 5) {
+                        String messageStartingIn = Objects.requireNonNull(getConfig().getString("main.gameStartingIn"))
+                                .replace("%seconds%", String.valueOf(startTime))
+                                .replace("%suffix%", PlayerUtils.sklon(startTime, "u", "y", ""));
+                        Bukkit.broadcastMessage(getPrefix() + messageStartingIn);
+                    }
+                    //Scoreboard
+                    List<String> lines = Objects.requireNonNull(getConfig().getStringList("main.scoreboardStartingLines"));
+                    for(int i=0; i<lines.size(); i++){
+                        String line = lines.get(i)
+                                .replace("%seconds%", String.valueOf(startTime))
+                                .replace("%suffix%", PlayerUtils.sklon(startTime, "u", "y", ""));
+                        if(!line.contains("|")) line += "|";
+                        String[] prefSuf = line.split("[|]", 2);
+                        myScoreboardInstance.setLine(i, prefSuf[0], prefSuf[1]);
+                    }
                 }
             }.runTaskTimer(this, 20, 20);
         }else{
@@ -300,7 +343,7 @@ public class BedWars extends JavaPlugin {
 
     public ArrayList<Player> getPlayersInTeam(int team){
         ArrayList<Player> list = this.playerTeams.get(team);
-        if(list == null) return new ArrayList<Player>();
+        if(list == null) return new ArrayList<>();
         return list;
     }
 
@@ -392,7 +435,7 @@ public class BedWars extends JavaPlugin {
         }
         //Kdy skonci hra? Kdyz jsou ve hre pouze hraci jednoho tymu.
         int teamCount = this.getConfig().getInt("arena.teams");
-        ArrayList<Integer> notEmptyTeams = new ArrayList<Integer>();
+        ArrayList<Integer> notEmptyTeams = new ArrayList<>();
         for (int i = 0; i < teamCount; i++) {
             if(this.getPlayersInTeam(i).size() > 0) notEmptyTeams.add(i);
         }
@@ -406,7 +449,7 @@ public class BedWars extends JavaPlugin {
         //Ukoncit hru
         this.gameState = GameState.RESTARTING;
         Bukkit.broadcastMessage(getPrefix()+getConfig().getString("game.arenaRestarting"));
-        ArrayList<Player> onlinePlayers = new ArrayList<Player>(Bukkit.getOnlinePlayers());
+        ArrayList<Player> onlinePlayers = new ArrayList<>(Bukkit.getOnlinePlayers());
         for(Player p : onlinePlayers) {
             int team = getTeamOfPlayer(p);
             if(team >= 0){
@@ -420,6 +463,7 @@ public class BedWars extends JavaPlugin {
         }
         //nastavit scoreboard
         myScoreboardInstance.setLineCount(2);
+        myScoreboardInstance.setLine(1, "", "");
         //schedulnout restart areny na 10 sekund
         new BukkitRunnable(){
             private int timeToReset = 10;
@@ -427,19 +471,31 @@ public class BedWars extends JavaPlugin {
             public void run(){
                 timeToReset--;
                 if(timeToReset == 0){
-                    Bukkit.broadcastMessage(getPrefix()+"Arena se restartuje");
+                    Bukkit.broadcastMessage(getPrefix()+Objects.requireNonNull(getConfig().getString("game.arenaRestartingNow")));
                     gameState = GameState.LOBBY;
                     mapRegeneratorInstance.regenMap(null); //zregenerovat bloky
+                    //smazat vsechny armory
+                    playerArmor.clear();
+                    //smazat vsechny tymy
+                    playerTeams.clear();
                     //teleportovat vsechny na lobby a udelat fake join
-                    ArrayList<Player> onlinePlayers = new ArrayList<Player>(Bukkit.getOnlinePlayers());
+                    ArrayList<Player> onlinePlayers = new ArrayList<>(Bukkit.getOnlinePlayers());
                     for(Player p : onlinePlayers) {
                         getPlayerUtilsInstance().handlePlayerJoin(p);
                     }
                     this.cancel();
                     return;
                 }
-                Bukkit.broadcastMessage(getPrefix()+"Hra se restartuje za "+timeToReset+" sekund!");
-                myScoreboardInstance.setLine(1, "Restart za: ", "§a"+timeToReset+" §fsekund");
+                String restartInMessage = Objects.requireNonNull(getConfig().getString("game.arenaRestartingIn"))
+                        .replace("%seconds%", String.valueOf(timeToReset))
+                        .replace("%suffix%", PlayerUtils.sklon(timeToReset, "u", "y", ""));
+                Bukkit.broadcastMessage(getPrefix()+restartInMessage);
+                String secondLine = Objects.requireNonNull(getConfig().getString("game.scoreboardSecondLineRestarting"))
+                        .replace("%seconds%", String.valueOf(timeToReset))
+                        .replace("%suffix%", PlayerUtils.sklon(timeToReset, "u", "y", ""));
+                if(!secondLine.contains("|")) secondLine += "|";
+                String[] prefSuf = secondLine.split("[|]", 2);
+                myScoreboardInstance.setLine(1, prefSuf[0], prefSuf[1]);
             }
         }.runTaskTimer(this, 20, 20);
     }

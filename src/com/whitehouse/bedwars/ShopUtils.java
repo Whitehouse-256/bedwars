@@ -11,6 +11,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Objects;
 
 public class ShopUtils {
     private final BedWars plugin;
@@ -31,7 +32,7 @@ public class ShopUtils {
             this.plugin.getPlayerUtilsInstance().setPlayersArmor(player);
         }else{
             //Itemy na givnuti
-            ItemMeta im = itemToGive.getItemMeta();
+            ItemMeta im = Objects.requireNonNull(itemToGive.getItemMeta());
             im.setLore(null);
             String displayName = im.getDisplayName();
             if(displayName.contains("×")){
@@ -47,7 +48,7 @@ public class ShopUtils {
     }
 
     public String getItemPriceString(String configKey){
-        String priceFromConfig = this.plugin.getConfig().getString(configKey);
+        String priceFromConfig = Objects.requireNonNull(this.plugin.getConfig().getString(configKey));
         try {
             String[] split = priceFromConfig.split(",");
             if (split[0].equalsIgnoreCase("iron")) {
@@ -67,8 +68,8 @@ public class ShopUtils {
     }
 
     public ArrayList<ItemStack> getShopCategoryListItems(){
-        ArrayList<ItemStack> list = new ArrayList<ItemStack>();
-        ItemMeta im = null;
+        ArrayList<ItemStack> list = new ArrayList<>();
+        ItemMeta im;
 
         ItemStack cat_1 = new ItemStack(Material.DIAMOND_CHESTPLATE);
         im = cat_1.getItemMeta();
@@ -111,8 +112,8 @@ public class ShopUtils {
     }
 
     public ArrayList<ItemStack> getShopCategoryItems(int cat, Player player){
-        ArrayList<ItemStack> list = new ArrayList<ItemStack>();
-        ItemMeta im = null;
+        ArrayList<ItemStack> list = new ArrayList<>();
+        ItemMeta im;
 
         if(cat == 0){
             //Armor
@@ -272,7 +273,7 @@ public class ShopUtils {
     }
 
     public void openShopMenu(Player player){
-        Inventory inv = Bukkit.createInventory(null, 45, this.plugin.getConfig().getString("game.shopMenuName"));
+        Inventory inv = Bukkit.createInventory(null, 45, Objects.requireNonNull(this.plugin.getConfig().getString("game.shopMenuName")));
         //V prvnim radku jsou kategorie polozek
         ArrayList<ItemStack> list = this.getShopCategoryListItems();
         int i=0;
@@ -285,9 +286,9 @@ public class ShopUtils {
     }
 
     public String getNameOfMaterial(Material material){
-        if(material.toString().contains("WOOL")) return plugin.getConfig().getString("shop.names.blocks.eight_wool").replaceFirst("\\d×[ ]*", "");
-        if(material == Material.OAK_PLANKS) return plugin.getConfig().getString("shop.names.blocks.eight_planks").replaceFirst("\\d×[ ]*", "");
-        if(material == Material.END_STONE) return plugin.getConfig().getString("shop.names.blocks.four_endstone").replaceFirst("\\d×[ ]*", "");
+        if(material.toString().contains("WOOL")) return Objects.requireNonNull(plugin.getConfig().getString("shop.names.blocks.eight_wool")).replaceFirst("\\d×[ ]*", "");
+        if(material == Material.OAK_PLANKS) return Objects.requireNonNull(plugin.getConfig().getString("shop.names.blocks.eight_planks")).replaceFirst("\\d×[ ]*", "");
+        if(material == Material.END_STONE) return Objects.requireNonNull(plugin.getConfig().getString("shop.names.blocks.four_endstone")).replaceFirst("\\d×[ ]*", "");
         if(material == Material.OBSIDIAN) return plugin.getConfig().getString("shop.names.blocks.obsidian");
         return null;
     }

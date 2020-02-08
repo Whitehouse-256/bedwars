@@ -3,9 +3,9 @@ package com.whitehouse.bedwars;
 import java.util.Objects;
 
 public class XYZCoords {
-    public int x;
-    public int y;
-    public int z;
+    public final int x;
+    public final int y;
+    public final int z;
     public XYZCoords(int x, int y, int z){
         this.x = x;
         this.y = y;

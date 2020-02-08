@@ -18,13 +18,24 @@ main:
   successResourceSpawnerAdded: "§aPridan spawner na surovinu "
   successLobbySet: "§aNastaveno herni lobby"
   scoreboardLobbyName: "§4Bed§fWars"
+  scoreboardLobbyLines:
+    - "Lobby"
+    - "Cekani na hrace..."
+  scoreboardStartingLines:
+    - "Zacatek za: |§a%seconds% §fsekund%suffix%"
+  gameStartingIn: "Hra zacina za §9%seconds% §asekund%suffix%!"
+  chatFormatLobby: "§7%player% §e§l» §f%message%"
+  chatFormatIngameTeam: "%playerColor%§lTEAM§r %playerColor%%player% §7§l» §f%message%"
+  chatFormatIngameAll: "§f§lALL§r %playerColor%%player% §7§l» §f%message%"
 game:
-  minPlayers: 1
+  minPlayers: 2
   startTime: 30
   startingMessage: "Hra startuje."
+  gameStarted: "Hra zacala!"
   notStartingMessage: "Je tu nedostatek hracu, start byl odlozen."
   charHasBed: " §a§l✔"
   charEliminated: " §c§l✘"
+  scoreboardFirstLineIngame: "Cas od startu: |§a%time%"
   shopMenuName: "§2Shop"
   shopAlreadyHaveArmor: "§cMuzes si koupit pouze lepsi brneni!"
   shopNotEnoughResources: "§cNemas dostatek itemu ke koupi!"
@@ -32,9 +43,14 @@ game:
   bedDestroyed: "§7Hrac %playerColor%%player% §7znicil postel tymu %destroyedTeam%§7."
   destroyedYourBedTitle: "§cZnicena tva postel!"
   destroyedYourBedSubTitle: "§fKdyz umres, uz se nerespawnes."
+  playerKilledBy: "§7Hrac %victimColor%%victim% §7byl zabit hracem %killerColor%%killer%."
+  playerDied: "§7Hrac %victimColor%%victim% §7zemrel."
   playerEliminated: "§7Hrac %playerColor%%player% §7byl §celiminovan§7."
   arenaRestarting: "§aHra skoncila, arena se restartuje!"
   youHaveWon: "§aGratuluji, VYHRAL jsi hru!"
+  arenaRestartingIn: "§aArena se restartuje za %seconds% sekund%suffix%!"
+  scoreboardSecondLineRestarting: "Restart za: |§c%seconds% §fsekund%suffix%"
+  arenaRestartingNow: "§cArena se restartuje."
 shop:
   categoryArmor: "§aBrneni"
   categoryWeapons: "§cZbrane"
