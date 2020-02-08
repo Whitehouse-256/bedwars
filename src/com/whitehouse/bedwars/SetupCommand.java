@@ -1,5 +1,6 @@
 package com.whitehouse.bedwars;
 
+import com.sun.javaws.exceptions.InvalidArgumentException;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
@@ -10,6 +11,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 public class SetupCommand implements CommandExecutor {
     private final BedWars plugin;
@@ -33,7 +35,7 @@ public class SetupCommand implements CommandExecutor {
         if(args.length == 0) {
             player.sendMessage(plugin.getPrefix()+"§aSETUP: V inventari mas itemy pro nastavovani ruznych lokaci.");
             player.sendMessage("§aVlnou nastavis danou vec pro dany tym, poslednim itemem (na slotu 9) zmenis nastavovanou vec.");
-            player.sendMessage("§aDale nastav §2/bw-setup teams <1-8> §apocet tymu.");
+            player.sendMessage("§aDale nastav §2/bw-setup teams <2-8> §apocet tymu.");
             player.sendMessage("§aDale nastav §2/bw-setup playersPerTeam <1-32> §apocet hracu v tymu.");
             player.sendMessage("§aNakonec napis §2/bw-setup done §apro uzavreni nastaveni mapy.");
             player.sendMessage("§aLze i nastavit ohraniceni mapy pro automatickou regeneraci §2/bw-setup pos1 §aa §2/bw-setup pos2§a.");
@@ -57,6 +59,32 @@ public class SetupCommand implements CommandExecutor {
             player.getInventory().addItem(switcher);
             return true;
         }else{
+            if(args[0].equalsIgnoreCase("teams")){
+                int num = 0;
+                try{
+                    num = Integer.parseInt(args[1]);
+                    if(num < 2 || num > 8) throw new Exception("Invalid argument range!");
+                }catch(Exception e){
+                    player.sendMessage("§cMusis zadat cislo (2-8) jako dalsi argument");
+                    return true;
+                }
+                this.plugin.getConfig().set("arena.teams", num);
+                player.sendMessage("§aPocet tymu nastaven na "+num+"!");
+                return true;
+            }
+            if(args[0].equalsIgnoreCase("playersPerTeam")){
+                int num = 0;
+                try{
+                    num = Integer.parseInt(args[1]);
+                    if(num < 1 || num > 32) throw new Exception("Invalid argument range!");
+                }catch(Exception e){
+                    player.sendMessage("§cMusis zadat cislo (1-32) jako dalsi argument");
+                    return true;
+                }
+                this.plugin.getConfig().set("arena.playersPerTeam", num);
+                player.sendMessage("§aPocet hracu na tym nastaven na "+num+"!");
+                return true;
+            }
             if(args[0].equalsIgnoreCase("done")){
                 this.plugin.disableSetup();
                 this.plugin.getConfig().set("main.runSetup", false);

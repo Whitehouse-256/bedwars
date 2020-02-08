@@ -215,6 +215,7 @@ public class MapRegenerator {
                                 }
                             }
                             if(player != null) player.sendMessage(localPlugin.getPrefix()+"§aBloky regenerovany!");
+                            plugin.getLogger().info("Bloky regenerovany!");
                         }
                     });
                 } catch (Exception e) {

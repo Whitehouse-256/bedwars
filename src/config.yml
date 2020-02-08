@@ -30,7 +30,11 @@ game:
   shopNotEnoughResources: "§cNemas dostatek itemu ke koupi!"
   cannotDestroyOwnBed: "§cNemuzes znicit svoji postel!"
   bedDestroyed: "§7Hrac %playerColor%%player% §7znicil postel tymu %destroyedTeam%§7."
+  destroyedYourBedTitle: "§cZnicena tva postel!"
+  destroyedYourBedSubTitle: "§fKdyz umres, uz se nerespawnes."
   playerEliminated: "§7Hrac %playerColor%%player% §7byl §celiminovan§7."
+  arenaRestarting: "§aHra skoncila, arena se restartuje!"
+  youHaveWon: "§aGratuluji, VYHRAL jsi hru!"
 shop:
   categoryArmor: "§aBrneni"
   categoryWeapons: "§cZbrane"

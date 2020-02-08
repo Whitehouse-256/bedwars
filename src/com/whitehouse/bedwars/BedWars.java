@@ -1,7 +1,9 @@
 package com.whitehouse.bedwars;
 
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.*;
@@ -9,10 +11,7 @@ import org.bukkit.plugin.java.*;
 import org.bukkit.Bukkit;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 public class BedWars extends JavaPlugin {
 
@@ -127,6 +126,12 @@ public class BedWars extends JavaPlugin {
             //Vycisten inventar a teleportovan
         }
 
+        //Smazat dropy
+        Collection<Item> drops = onlinePlayers.get(0).getWorld().getEntitiesByClass(Item.class);
+        for(Item ent : drops){
+            ent.remove();
+        }
+
         //Udelat scoreboard:
         this.myScoreboardInstance.setLine(0, "Arena je ve ", "§fhre");
         for(int i=1; i<=teamCount; i++) {
@@ -191,6 +196,10 @@ public class BedWars extends JavaPlugin {
                 }
                 startTime++; //kazdych 10 ticku projde tato funkce
                 //Game Loop:
+                //Checknout konec hry pro jistotu
+                if(startTime % 4 == 0){ //kazde 2 sekundy
+                    checkEndGame();
+                }
                 //Updatovani scoreboardu
                 int seconds = startTime/2;
                 int minutes = seconds/60;
@@ -210,7 +219,7 @@ public class BedWars extends JavaPlugin {
                     loc.getWorld().dropItem(loc, is);
                 }
                 //base gold spawner - kazdych 100 ticku
-                if(startTime %10 == 0){
+                if(startTime % 10 == 0){
                     for(Location l : teamSpawns){
                         Location loc = l.clone();
                         loc.add(2*random.nextDouble()-1.0, 0, 2*random.nextDouble()-1.0); //radius 2
@@ -219,7 +228,7 @@ public class BedWars extends JavaPlugin {
                     }
                 }
                 //iron spawner - kazdych 20 ticku
-                if(startTime %2 == 0){
+                if(startTime % 2 == 0){
                     for(Location l : resourceSpawners_2){
                         Location loc = l.clone();
                         ItemStack is = new ItemStack(Material.IRON_INGOT);
@@ -228,7 +237,7 @@ public class BedWars extends JavaPlugin {
                 }
                 //List<String> spawnerList1 = getConfig().getStringList();
                 //gold spawner - kazdych 40 ticku
-                if(startTime %4 == 0){
+                if(startTime % 4 == 0){
                     for(Location l : resourceSpawners_3){
                         Location loc = l.clone();
                         ItemStack is = new ItemStack(Material.GOLD_INGOT);
@@ -236,7 +245,7 @@ public class BedWars extends JavaPlugin {
                     }
                 }
                 //diamond spawner - kazdych 300 ticku
-                if(startTime %30 == 0){
+                if(startTime % 30 == 0){
                     for(Location l : resourceSpawners_4){
                         Location loc = l.clone();
                         ItemStack is = new ItemStack(Material.DIAMOND);
@@ -267,13 +276,15 @@ public class BedWars extends JavaPlugin {
                     if(Bukkit.getOnlinePlayers().size() < getConfig().getInt("game.minPlayers")){
                         //Nekdo odesel, zrusit startovani
                         setGameStarting(false);
+                        this.cancel();
+                        return;
                     }
                     startTime--;
                     if(startTime == 0){
                         Bukkit.broadcastMessage(getPrefix()+"Hra zacala");
-                        this.cancel();
                         gameState = GameState.INGAME;
                         startGameAndLoop();
+                        this.cancel();
                         return;
                     }
                     Bukkit.broadcastMessage(getPrefix()+"Hra zacne za "+startTime+" sekund!");
@@ -373,6 +384,64 @@ public class BedWars extends JavaPlugin {
 
     public void setPlayerArmor(Player player, int armor){
         this.playerArmor.put(player, armor);
+    }
+
+    public void checkEndGame(){
+        if(this.gameState != GameState.INGAME){
+            return; //pokud neni stav INGAME, nema smysl kontrolovat konec hry
+        }
+        //Kdy skonci hra? Kdyz jsou ve hre pouze hraci jednoho tymu.
+        int teamCount = this.getConfig().getInt("arena.teams");
+        ArrayList<Integer> notEmptyTeams = new ArrayList<Integer>();
+        for (int i = 0; i < teamCount; i++) {
+            if(this.getPlayersInTeam(i).size() > 0) notEmptyTeams.add(i);
+        }
+        if(notEmptyTeams.size()<2){
+            //Bud jsou hraci v jednom tymu, nebo neni nikdo ve hre (divny, ale treba se to stane)
+            this.endGame();
+        }
+    }
+
+    public void endGame(){
+        //Ukoncit hru
+        this.gameState = GameState.RESTARTING;
+        Bukkit.broadcastMessage(getPrefix()+getConfig().getString("game.arenaRestarting"));
+        ArrayList<Player> onlinePlayers = new ArrayList<Player>(Bukkit.getOnlinePlayers());
+        for(Player p : onlinePlayers) {
+            int team = getTeamOfPlayer(p);
+            if(team >= 0){
+                //Hrac je v tymu (zde se muze popr davat odmena)
+                p.sendMessage(getPrefix()+getConfig().getString("game.youHaveWon"));
+            }
+            //kazdemu sundat team
+            this.myScoreboardInstance.removePlayerFromAllTeams(p);
+            //dat kazdemu spectatora
+            p.setGameMode(GameMode.SPECTATOR);
+        }
+        //nastavit scoreboard
+        myScoreboardInstance.setLineCount(2);
+        //schedulnout restart areny na 10 sekund
+        new BukkitRunnable(){
+            private int timeToReset = 10;
+            @Override
+            public void run(){
+                timeToReset--;
+                if(timeToReset == 0){
+                    Bukkit.broadcastMessage(getPrefix()+"Arena se restartuje");
+                    gameState = GameState.LOBBY;
+                    mapRegeneratorInstance.regenMap(null); //zregenerovat bloky
+                    //teleportovat vsechny na lobby a udelat fake join
+                    ArrayList<Player> onlinePlayers = new ArrayList<Player>(Bukkit.getOnlinePlayers());
+                    for(Player p : onlinePlayers) {
+                        getPlayerUtilsInstance().handlePlayerJoin(p);
+                    }
+                    this.cancel();
+                    return;
+                }
+                Bukkit.broadcastMessage(getPrefix()+"Hra se restartuje za "+timeToReset+" sekund!");
+                myScoreboardInstance.setLine(1, "Restart za: ", "§a"+timeToReset+" §fsekund");
+            }
+        }.runTaskTimer(this, 20, 20);
     }
 
 }

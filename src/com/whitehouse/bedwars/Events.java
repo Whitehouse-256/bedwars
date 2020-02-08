@@ -16,6 +16,7 @@ import org.bukkit.event.player.*;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -60,6 +61,7 @@ public class Events implements Listener {
         for (int i = 0; i < teamCount; i++) {
             this.plugin.removePlayerFromTeam(i, player);
         }
+        plugin.checkEndGame();
     }
 
     @EventHandler
@@ -355,6 +357,12 @@ public class Events implements Listener {
                 player.setGameMode(GameMode.SPECTATOR);
                 Location respawnLoc = plugin.teamSpawns.get(0);
                 event.setRespawnLocation(respawnLoc);
+                new BukkitRunnable(){
+                    @Override
+                    public void run(){
+                        player.setGameMode(GameMode.SPECTATOR);
+                    }
+                }.runTaskLater(plugin, 5);
             }
         }
     }
@@ -376,6 +384,7 @@ public class Events implements Listener {
                     .replace("%playerColor%", plugin.getPlayerUtilsInstance().getColorOfNthTeam(team).toString());
             Bukkit.broadcastMessage(this.plugin.getPrefix()+message);
             this.plugin.setPlayerToSpectator(player);
+            plugin.checkEndGame();
         }
     }
 
@@ -480,6 +489,11 @@ public class Events implements Listener {
                                 .replace("%destroyedTeam%", plugin.getPlayerUtilsInstance().getNameOfNthTeam(team))
                                 .replace("%playerColor%", plugin.getPlayerUtilsInstance().getColorOfNthTeam(playersTeam).toString());
                         Bukkit.broadcastMessage(plugin.getPrefix() + message);
+                        ArrayList<Player> victimPlayers = plugin.getPlayersInTeam(team);
+                        for(Player p : victimPlayers){
+                            p.sendTitle(plugin.getConfig().getString("game.destroyedYourBedTitle"), plugin.getConfig().getString("game.destroyedYourBedSubTitle"), 0, 35, 10);
+                            p.playSound(p.getLocation(), Sound.ENTITY_ENDER_DRAGON_GROWL, 1f, 0.5f);
+                        }
                     }else{
                         event.setCancelled(true);
                     }
@@ -506,6 +520,13 @@ public class Events implements Listener {
             is.setItemMeta(im);
         }
         item.setItemStack(is);
+    }
+
+    @EventHandler
+    public void onPickup(EntityPickupItemEvent event){
+        if(plugin.getGameState() != GameState.INGAME){
+            event.setCancelled(true);
+        }
     }
 
 }
