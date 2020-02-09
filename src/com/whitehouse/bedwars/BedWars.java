@@ -1,6 +1,7 @@
 package com.whitehouse.bedwars;
 
 import org.bukkit.*;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -147,6 +148,50 @@ public class BedWars extends JavaPlugin {
         }
         this.myScoreboardInstance.setLineCount(teamCount+1);
 
+        int min_x, max_x, min_y, max_y, min_z, max_z;
+        //Nacteni hranic areny
+        String bound1Loc = getConfig().getString("arena.bound1", null);
+        String bound2Loc = getConfig().getString("arena.bound2", null);
+        World world = Bukkit.getWorld("world");
+        if(bound1Loc == null || bound2Loc == null || world == null){
+            getLogger().info("§cCannot start game, arena has not set bounds.");
+            Bukkit.broadcastMessage(getPrefix()+"§cArena nelze spustit, protoze neni nastavena!");
+            return;
+        }else {
+            String[] split = bound1Loc.split(";");
+            int x = Integer.parseInt(split[0]);
+            int y = Integer.parseInt(split[1]);
+            int z = Integer.parseInt(split[2]);
+            Block bound1 = world.getBlockAt(x, y, z);
+            split = bound2Loc.split(";");
+            x = Integer.parseInt(split[0]);
+            y = Integer.parseInt(split[1]);
+            z = Integer.parseInt(split[2]);
+            Block bound2 = world.getBlockAt(x, y, z);
+            if (bound1.getX() < bound2.getX()) {
+                min_x = bound1.getX();
+                max_x = bound2.getX();
+            } else {
+                min_x = bound2.getX();
+                max_x = bound1.getX();
+            }
+            if (bound1.getY() < bound2.getY()) {
+                min_y = bound1.getY();
+                max_y = bound2.getY();
+            } else {
+                min_y = bound2.getY();
+                max_y = bound1.getY();
+            }
+            if (bound1.getZ() < bound2.getZ()) {
+                min_z = bound1.getZ();
+                max_z = bound2.getZ();
+            } else {
+                min_z = bound2.getZ();
+                max_z = bound1.getZ();
+            }
+        }
+        //Hranice jsou nyni v [min|max]_[x|y|z]
+
         /* Vyresit spawnery:
         Nejdriv si nactu vsechny mozny resource spawnery do listu,
         pak budu jen prochazet jednotlive listy a z nich spawnovat.
@@ -220,6 +265,26 @@ public class BedWars extends JavaPlugin {
                 //Checknout konec hry pro jistotu
                 if (startTime % 4 == 0) { //kazde 2 sekundy
                     checkEndGame();
+                }
+                //Zkontrolovat hrace, jestli jsou uvnitr areny
+                if (startTime % 3 == 0) { //kazdych 1,5 sekundy
+                    ArrayList<Player> onlinePlayers = new ArrayList<>(Bukkit.getOnlinePlayers());
+                    for (Player p : onlinePlayers) {
+                        int team = getTeamOfPlayer(p);
+                        Location location = p.getLocation();
+                        if (location.getBlockX() < min_x || location.getBlockX() > max_x ||
+                                location.getBlockY() < min_y || location.getBlockY() > max_y ||
+                                location.getBlockZ() < min_z || location.getBlockZ() > max_z){
+                            //hrac je mimo mapu
+                            if (team == -1) { //hrac neni v tymu
+                                p.teleport(teamSpawns.get(0));
+                            }else{
+                                //dat damage hraci
+                                p.damage(5);
+                                p.sendMessage(getPrefix()+getConfig().getString("game.outsideArena"));
+                            }
+                        }
+                    }
                 }
                 //Updatovani scoreboardu
                 int seconds = startTime / 2;

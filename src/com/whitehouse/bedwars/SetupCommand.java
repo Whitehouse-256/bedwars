@@ -36,11 +36,11 @@ public class SetupCommand implements CommandExecutor {
             player.sendMessage("§aVlnou nastavis danou vec pro dany tym, poslednim itemem (na slotu 9) zmenis nastavovanou vec.");
             player.sendMessage("§aDale nastav §2/bw-setup teams <2-8> §apocet tymu.");
             player.sendMessage("§aDale nastav §2/bw-setup playersPerTeam <1-32> §apocet hracu v tymu.");
-            player.sendMessage("§aNakonec napis §2/bw-setup done §apro uzavreni nastaveni mapy.");
-            player.sendMessage("§aLze i nastavit ohraniceni mapy pro automatickou regeneraci §2/bw-setup pos1 §aa §2/bw-setup pos2§a.");
+            player.sendMessage("§aNastav hranice areny §2/bw-setup pos1 §aa §2/bw-setup pos2§a.");
             player.sendMessage("§aPak musis napsat §2/bw-setup loadBlocks §apro nacteni bloku mapy do seznamu.");
             player.sendMessage("§aJako dalsi napis §2/bw-setup saveMap §apro ulozeni bloku do souboru.");
-            player.sendMessage("§aPrikazem §2/bw-setup regenMap §ase regeneruje herni mapa.");
+            player.sendMessage("§aNakonec napis §2/bw-setup done §apro uzavreni nastaveni mapy.");
+            player.sendMessage("§aPrikazem §2/bw-setup regenMap §ase pak regeneruje herni mapa.");
             this.plugin.enableSetup();
             //Itemy do inventare
             player.getInventory().clear();

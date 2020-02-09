@@ -95,7 +95,15 @@ public class Events implements Listener {
     @EventHandler
     public void onPlayerDamage(EntityDamageEvent event){
         if(event.getEntityType() == EntityType.PLAYER){
-            if(this.plugin.getGameState().isInvincible()) event.setCancelled(true);
+            if(this.plugin.getGameState().isInvincible()){
+                event.setCancelled(true);
+                if(event.getCause() == EntityDamageEvent.DamageCause.VOID){
+                    Location lobby = plugin.getPlayerUtilsInstance().getLobby();
+                    if(lobby != null){
+                        event.getEntity().teleport(lobby);
+                    }
+                }
+            }
         }
     }
 
@@ -109,7 +117,7 @@ public class Events implements Listener {
         if (item == null) return;
         //kliknul nejakym itemem
         if(this.plugin.getGameState().isTeamSelectable()){ //vyber tymu
-            if(item.getType() == Material.RED_BED){
+            if(item.getType() == Material.RED_BED && player.getGameMode() != GameMode.CREATIVE){
                 event.setCancelled(true);
                 this.plugin.getPlayerUtilsInstance().openTeamSelectMenu(player);
             }
@@ -372,7 +380,7 @@ public class Events implements Listener {
     public void onRespawn(PlayerRespawnEvent event){
         Player player = event.getPlayer();
         int team = plugin.getTeamOfPlayer(player);
-        if (this.plugin.getGameState() == GameState.INGAME) {
+        if (this.plugin.getGameState() == GameState.INGAME || this.plugin.getGameState() == GameState.RESTARTING) {
             if(this.plugin.teamHasBed(team)) {
                 Location respawnLoc = plugin.teamSpawns.get(team);
                 event.setRespawnLocation(respawnLoc);
@@ -387,6 +395,12 @@ public class Events implements Listener {
                         player.setGameMode(GameMode.SPECTATOR);
                     }
                 }.runTaskLater(plugin, 5);
+            }
+        }else{
+            //Teleportovat hrace do herniho lobby
+            Location lobby = this.plugin.getPlayerUtilsInstance().getLobby();
+            if(lobby != null){
+                player.teleport(lobby);
             }
         }
     }
@@ -464,6 +478,9 @@ public class Events implements Listener {
         Player player = event.getPlayer();
         if(event.getAction() != Action.RIGHT_CLICK_BLOCK){
             return;
+        }
+        if(plugin.getGameState() != GameState.INGAME){
+            return; //arena neni ve hre
         }
         //Hrac klikl na blok
         Block block = event.getClickedBlock();

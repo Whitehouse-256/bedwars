@@ -15,6 +15,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Objects;
 import java.util.Scanner;
 
@@ -30,10 +31,16 @@ public class MapRegenerator {
 
     public void setBound1(Location location){
         this.bound1 = location;
+        String loc = location.getBlockX()+";"+location.getBlockY()+";"+location.getBlockZ();
+        this.plugin.getConfig().set("arena.bound1", loc);
+        this.plugin.saveConfig();
     }
 
     public void setBound2(Location location){
         this.bound2 = location;
+        String loc = location.getBlockX()+";"+location.getBlockY()+";"+location.getBlockZ();
+        this.plugin.getConfig().set("arena.bound2", loc);
+        this.plugin.saveConfig();
     }
 
     public void loadAllBlocks(@Nullable Player player){
@@ -75,7 +82,9 @@ public class MapRegenerator {
                 for(int z=min_z; z<=max_z; z++){
                     //Pro kazdy blok postupne
                     BlockState blockState = world.getBlockAt(x, y, z).getState();
-                    this.mapData.add(blockState);
+                    if(blockState.getType() != Material.AIR) { //ukladat pouze neprazdne bloky
+                        this.mapData.add(blockState);
+                    }
                 }
             }
         }
@@ -135,10 +144,34 @@ public class MapRegenerator {
     public void regenMap(@Nullable Player player){
         BedWars localPlugin = this.plugin;
         File dir = this.plugin.getDataFolder();
+        //Ziskat hranice mapy
+        String bound1Loc = this.plugin.getConfig().getString("arena.bound1", null);
+        String bound2Loc = this.plugin.getConfig().getString("arena.bound2", null);
+        if(bound1Loc == null || bound2Loc == null){
+            if(player != null) player.sendMessage(plugin.getPrefix()+"§cArena nema nastavene hranice!");
+            plugin.getLogger().info("§cCannot regenerate, arena has not set bounds.");
+            return;
+        }
+        World world = Bukkit.getWorld("world");
+        if(world == null){
+            plugin.getLogger().info("§cCannot regenerate, world does not exist.");
+            return;
+        }
+        String[] split = bound1Loc.split(";");
+        int x = Integer.parseInt(split[0]);
+        int y = Integer.parseInt(split[1]);
+        int z = Integer.parseInt(split[2]);
+        Block bound1 = world.getBlockAt(x, y, z);
+        split = bound2Loc.split(";");
+        x = Integer.parseInt(split[0]);
+        y = Integer.parseInt(split[1]);
+        z = Integer.parseInt(split[2]);
+        Block bound2 = world.getBlockAt(x, y, z);
+        //Precist soubor s daty o blocich
         if(player != null) player.sendMessage(plugin.getPrefix()+"§aVytvarim vlakno pro pokus o obnoveni mapy ze souboru. Toto muze chvili trvat...");
         Thread thread = new Thread(){
             public void run(){
-                ArrayList<ConcreteBlockState> localList = new ArrayList<>();
+                HashMap<XYZCoords, ConcreteBlockState> localMap = new HashMap<>();
                 try {
                     File dataFile = new File(dir, "arenaBlocks.csv");
                     Scanner sc = new Scanner(dataFile);
@@ -159,8 +192,9 @@ public class MapRegenerator {
                                 e.printStackTrace();
                             }
                         }
+                        XYZCoords xyzCoords = new XYZCoords(x, y, z);
                         ConcreteBlockState concreteBlockState = new ConcreteBlockState(x, y, z, material, blockData, signLines);
-                        localList.add(concreteBlockState);
+                        localMap.put(xyzCoords, concreteBlockState);
                     }
                     sc.close();
                     Bukkit.getScheduler().runTask(localPlugin, new Runnable() {
@@ -169,36 +203,130 @@ public class MapRegenerator {
                             //zkopirovat data do main threadu a tam pokracovat
                             ArrayList<ConcreteBlockState> bedHeads = new ArrayList<>();
                             ArrayList<ConcreteBlockState> bedFoots = new ArrayList<>();
-                            if(player != null) player.sendMessage(localPlugin.getPrefix()+"§aNacteno "+localList.size()+" bloku ze souboru!");
-                            //v druhem threadu se k datum v localList uz nepristupuje, je to tedy bezpecne tady v main threadu
+                            ArrayList<ConcreteBlockState> doubleBlocks = new ArrayList<>();
+                            if(player != null) player.sendMessage(localPlugin.getPrefix()+"§aNacteno "+localMap.size()+" bloku ze souboru!");
+                            //v druhem threadu se k datum v localMap uz nepristupuje, je to tedy bezpecne tady v main threadu
                             World world = Bukkit.getWorld("world");
                             assert world != null;
-                            for(ConcreteBlockState cbs : localList){
-                                if(cbs.material.toString().contains("BED")){
-                                    //postele se musi resit tak, ze se nejdrive postavi head, potom az foot
-                                    if(cbs.blockData.getAsString().contains("part=head")){
-                                        bedHeads.add(cbs);
-                                    }else{
-                                        bedFoots.add(cbs);
-                                    }
-                                    continue;
-                                }
-                                Block b = world.getBlockAt(cbs.x, cbs.y, cbs.z);
-                                b.setType(cbs.material);
-                                b.setBlockData(cbs.blockData);
-                                if(cbs.signLines != null){
-                                    try {
-                                        Sign sign = (Sign) b.getState();
-                                        String[] lines = cbs.signLines.split("\\\\n");
-                                        for (int i = 0; i < lines.length && i < 4; i++) {
-                                            sign.setLine(i, lines[i].replace("/BACK/", "\\"));
+                            //Ted se zacnou obnovovat bloky
+
+                            int min_x, max_x, min_y, max_y, min_z, max_z;
+
+                            if(bound1.getX() < bound2.getX()){
+                                min_x = bound1.getX();
+                                max_x = bound2.getX();
+                            }else{
+                                min_x = bound2.getX();
+                                max_x = bound1.getX();
+                            }
+                            if(bound1.getY() < bound2.getY()){
+                                min_y = bound1.getY();
+                                max_y = bound2.getY();
+                            }else{
+                                min_y = bound2.getY();
+                                max_y = bound1.getY();
+                            }
+                            if(bound1.getZ() < bound2.getZ()){
+                                min_z = bound1.getZ();
+                                max_z = bound2.getZ();
+                            }else{
+                                min_z = bound2.getZ();
+                                max_z = bound1.getZ();
+                            }
+
+                            //Zvetsit oblast
+                            min_x -= 10;
+                            min_y -= 10;
+                            min_z -= 10;
+                            max_x += 10;
+                            max_y += 10;
+                            max_z += 10;
+                            if(min_y<0) min_y=0;
+                            if(max_y>255) max_y=255;
+
+                            for(int y=min_y; y<=max_y; y++) {
+                                for (int x = min_x; x <= max_x; x++) {
+                                    for (int z = min_z; z <= max_z; z++) {
+                                        Block block = world.getBlockAt(x, y, z);
+                                        XYZCoords xyzCoords = new XYZCoords(x, y, z);
+                                        if(localMap.containsKey(xyzCoords)){
+                                            //je to nejaky neprazdny blok
+                                            ConcreteBlockState cbs = localMap.get(xyzCoords);
+                                            String materialStr = cbs.material.toString();
+                                            if(materialStr.contains("BED")){
+                                                //postele se musi resit tak, ze se nejdrive postavi head, potom az foot
+                                                if(cbs.blockData.getAsString().contains("part=head")){
+                                                    bedHeads.add(cbs);
+                                                }else{
+                                                    bedFoots.add(cbs);
+                                                }
+                                                continue;
+                                            }else if(materialStr.contains("DOOR") || cbs.material == Material.TALL_GRASS || cbs.material == Material.LARGE_FERN
+                                                    || cbs.material == Material.PEONY || cbs.material == Material.ROSE_BUSH || cbs.material == Material.LILAC
+                                                    || cbs.material == Material.SUNFLOWER){
+                                                //double bloky se musi stavet v urcitem poradi
+                                                doubleBlocks.add(cbs);
+                                                continue;
+                                            }
+                                            Block b = world.getBlockAt(cbs.x, cbs.y, cbs.z);
+                                            b.setType(cbs.material);
+                                            b.setBlockData(cbs.blockData);
+                                            if(cbs.signLines != null){
+                                                try {
+                                                    Sign sign = (Sign) b.getState();
+                                                    String[] lines = cbs.signLines.split("\\\\n");
+                                                    for (int i = 0; i < lines.length && i < 4; i++) {
+                                                        sign.setLine(i, lines[i].replace("/BACK/", "\\"));
+                                                    }
+                                                    sign.update();
+                                                }catch (Exception e){
+                                                    e.printStackTrace();
+                                                }
+                                            }
+                                        }else{
+                                            //je to vzduch
+                                            block.setType(Material.AIR);
                                         }
-                                        sign.update();
-                                    }catch (Exception e){
-                                        e.printStackTrace();
                                     }
                                 }
                             }
+
+
+
+//                            for(ConcreteBlockState cbs : localMap){
+//                                String materialStr = cbs.material.toString();
+//                                if(materialStr.contains("BED")){
+//                                    //postele se musi resit tak, ze se nejdrive postavi head, potom az foot
+//                                    if(cbs.blockData.getAsString().contains("part=head")){
+//                                        bedHeads.add(cbs);
+//                                    }else{
+//                                        bedFoots.add(cbs);
+//                                    }
+//                                    continue;
+//                                }else if(materialStr.contains("DOOR") || cbs.material == Material.TALL_GRASS || cbs.material == Material.LARGE_FERN
+//                                        || cbs.material == Material.PEONY || cbs.material == Material.ROSE_BUSH || cbs.material == Material.LILAC
+//                                        || cbs.material == Material.SUNFLOWER){
+//                                    //double bloky se musi stavet v urcitem poradi
+//                                    doubleBlocks.add(cbs);
+//                                    continue;
+//                                }
+//                                Block b = world.getBlockAt(cbs.x, cbs.y, cbs.z);
+//                                b.setType(cbs.material);
+//                                b.setBlockData(cbs.blockData);
+//                                if(cbs.signLines != null){
+//                                    try {
+//                                        Sign sign = (Sign) b.getState();
+//                                        String[] lines = cbs.signLines.split("\\\\n");
+//                                        for (int i = 0; i < lines.length && i < 4; i++) {
+//                                            sign.setLine(i, lines[i].replace("/BACK/", "\\"));
+//                                        }
+//                                        sign.update();
+//                                    }catch (Exception e){
+//                                        e.printStackTrace();
+//                                    }
+//                                }
+//                            }
+
                             //Ted postavit postele
                             for(ConcreteBlockState cbsHead : bedHeads){
                                 //Najit odpovidajici foot cast
@@ -213,11 +341,36 @@ public class MapRegenerator {
                                         b = world.getBlockAt(cbsFoot.x, cbsFoot.y, cbsFoot.z);
                                         b.setType(cbsFoot.material);
                                         b.setBlockData(cbsFoot.blockData);
+                                        break;
+                                    }
+                                }
+                            }
+                            //Ted postavit dvojite bloky
+                            for(ConcreteBlockState cbsUpper : doubleBlocks){
+                                if(!cbsUpper.blockData.getAsString().contains("half=upper")){
+                                    continue; //neni to horni cast
+                                }
+                                for(ConcreteBlockState cbsLower : doubleBlocks){
+                                    if(!cbsLower.blockData.getAsString().contains("half=lower")){
+                                        continue; //neni to spodni cast
+                                    }
+                                    if(cbsLower.x == cbsUpper.x && cbsLower.z == cbsUpper.z && cbsLower.y+1 == cbsUpper.y){
+                                        //jsou to bloky nad sebou
+                                        Block b;
+                                        //postavit horni cast
+                                        b = world.getBlockAt(cbsUpper.x, cbsUpper.y, cbsUpper.z);
+                                        b.setType(cbsUpper.material);
+                                        b.setBlockData(cbsUpper.blockData);
+                                        //postavit spodni cast
+                                        b = world.getBlockAt(cbsLower.x, cbsLower.y, cbsLower.z);
+                                        b.setType(cbsLower.material);
+                                        b.setBlockData(cbsLower.blockData);
+                                        break;
                                     }
                                 }
                             }
                             if(player != null) player.sendMessage(localPlugin.getPrefix()+"§aBloky regenerovany!");
-                            plugin.getLogger().info("Bloky regenerovany!");
+                            plugin.getLogger().info("§aBloky regenerovany!");
                         }
                     });
                 } catch (Exception e) {

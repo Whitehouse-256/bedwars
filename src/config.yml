@@ -53,6 +53,7 @@ game:
   arenaRestartingIn: "§aArena se restartuje za %seconds% sekund%suffix%!"
   scoreboardSecondLineRestarting: "Restart za: |§c%seconds% §fsekund%suffix%"
   arenaRestartingNow: "§cArena se restartuje."
+  outsideArena: "§cJsi mimo arenu! Vrat se."
 shop:
   categoryArmor: "§aBrneni"
   categoryWeapons: "§cZbrane"
