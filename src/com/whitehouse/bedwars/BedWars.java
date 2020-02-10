@@ -67,6 +67,10 @@ public class BedWars extends JavaPlugin {
         return getConfig().getString("main.prefix");
     }
 
+    public int getStartTime(){
+        return this.startTime;
+    }
+
     public GameState getGameState(){
         return this.gameState;
     }
@@ -126,6 +130,7 @@ public class BedWars extends JavaPlugin {
             //Vsichni hraci jsou v nejakem tymu
             p.getInventory().clear();
             p.teleport(teamSpawns.get(team));
+            p.setGameMode(GameMode.SURVIVAL);
             this.playerUtilsInstance.setPlayersArmor(p);
             myScoreboardInstance.removePlayerFromAllTeams(p);
             this.getMyScoreboardInstance().addPlayerToTeam(team, p);
@@ -267,20 +272,20 @@ public class BedWars extends JavaPlugin {
                     checkEndGame();
                 }
                 //Zkontrolovat hrace, jestli jsou uvnitr areny
-                if (startTime % 3 == 0) { //kazdych 1,5 sekundy
+                if (startTime % 2 == 0) { //kazdou sekundu
                     ArrayList<Player> onlinePlayers = new ArrayList<>(Bukkit.getOnlinePlayers());
                     for (Player p : onlinePlayers) {
                         int team = getTeamOfPlayer(p);
                         Location location = p.getLocation();
                         if (location.getBlockX() < min_x || location.getBlockX() > max_x ||
-                                location.getBlockY() < min_y || location.getBlockY() > max_y ||
+                                location.getBlockY() > max_y ||
                                 location.getBlockZ() < min_z || location.getBlockZ() > max_z){
-                            //hrac je mimo mapu
+                            //hrac je mimo mapu (nepocita se kdyz je pod ni, aby to nespamovalo ve voidu)
                             if (team == -1) { //hrac neni v tymu
                                 p.teleport(teamSpawns.get(0));
                             }else{
                                 //dat damage hraci
-                                p.damage(5);
+                                p.damage(6);
                                 p.sendMessage(getPrefix()+getConfig().getString("game.outsideArena"));
                             }
                         }

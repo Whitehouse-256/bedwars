@@ -98,10 +98,19 @@ public class Events implements Listener {
             if(this.plugin.getGameState().isInvincible()){
                 event.setCancelled(true);
                 if(event.getCause() == EntityDamageEvent.DamageCause.VOID){
+                    //void to spawn
                     Location lobby = plugin.getPlayerUtilsInstance().getLobby();
                     if(lobby != null){
                         event.getEntity().teleport(lobby);
                     }
+                }
+            }else if(this.plugin.getGameState() == GameState.INGAME){
+                if(plugin.getStartTime() < 2){ //sekunda ve hre
+                    event.setCancelled(true);
+                    return;
+                }
+                if(event.getCause() == EntityDamageEvent.DamageCause.VOID){
+                    event.setDamage(1000);
                 }
             }
         }
@@ -415,7 +424,9 @@ public class Events implements Listener {
         String newMsg;
         if(oldMsg.contains("was slain by")){
             String killer = oldMsg.substring(oldMsg.indexOf("was slain by ")+"was slain by ".length());
-            killer = killer.substring(0, killer.indexOf(" "));
+            if(killer.contains(" ")) {
+                killer = killer.substring(0, killer.indexOf(" "));
+            }
             String killerColor = "§8";
             try{
                 Player killerPlayer = Bukkit.getPlayer(killer);
@@ -495,6 +506,21 @@ public class Events implements Listener {
             //Je to cedulka shopu
             this.plugin.getShopUtilsInstance().openShopMenu(player);
         }
+    }
+
+    @EventHandler
+    public void onClickOnBed(PlayerInteractEvent event){
+        if(event.getAction() != Action.RIGHT_CLICK_BLOCK){
+            return;
+        }
+        //Hrac klikl na blok
+        Block block = event.getClickedBlock();
+        if(block == null) return;
+        if(!block.getType().toString().contains("BED")){
+            return;
+        }
+        //Hrac klikl na postel
+        event.setCancelled(true);
     }
 
     @EventHandler
@@ -578,6 +604,11 @@ public class Events implements Listener {
                 //neni to postel
                 if (!plugin.getBlockBuildingInstance().containsBlock(block)) {
                     //tento blok nebyl postaven hracem
+                    String materialStr = block.getType().toString();
+                    if(materialStr.contains("GLASS") || materialStr.contains("LEAVES")){ //povolene bloky
+                        block.setType(Material.AIR); //aby nespadl drop
+                        return;
+                    }
                     event.setCancelled(true);
                 }
             }
@@ -641,6 +672,15 @@ public class Events implements Listener {
                     p.sendMessage(format);
                 }
             }
+        }
+    }
+
+    @EventHandler
+    public void onPlayerArmorDamage(PlayerItemDamageEvent event){
+        ItemStack item = event.getItem();
+        String materialStr = item.getType().toString();
+        if(materialStr.contains("HELMET") || materialStr.contains("CHESTPLATE") || materialStr.contains("LEGGINGS") || materialStr.contains("BOOTS")){
+            event.setCancelled(true); //armor se nenici
         }
     }
 

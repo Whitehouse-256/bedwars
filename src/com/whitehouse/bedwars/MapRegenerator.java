@@ -269,6 +269,8 @@ public class MapRegenerator {
                                                 continue;
                                             }
                                             Block b = world.getBlockAt(cbs.x, cbs.y, cbs.z);
+                                            b.setType(Material.STONE); //pro smazani inventare kontejneru
+                                            BlockData blockData = b.getBlockData();
                                             b.setType(cbs.material);
                                             b.setBlockData(cbs.blockData);
                                             if(cbs.signLines != null){
