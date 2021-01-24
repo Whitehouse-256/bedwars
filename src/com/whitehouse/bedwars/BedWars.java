@@ -437,6 +437,12 @@ public class BedWars extends JavaPlugin {
         if(list.contains(player)){
             list.remove(player);
             this.playerTeams.put(team, list);
+            //neni team prazdny?
+            if(list.isEmpty()){
+                //vyradit team
+                this.destroyTeamBed(team);
+                this.checkEndGame();
+            }
         }
     }
 
