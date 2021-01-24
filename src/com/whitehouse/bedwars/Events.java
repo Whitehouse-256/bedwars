@@ -618,18 +618,6 @@ public class Events implements Listener {
     }
 
     @EventHandler
-    public void onItemSpawn(ItemSpawnEvent event){
-        Item item = event.getEntity();
-        ItemStack is = item.getItemStack();
-        ItemMeta im = is.getItemMeta();
-        if(im != null) {
-            im.setDisplayName(this.plugin.getShopUtilsInstance().getNameOfMaterial(is.getType()));
-            is.setItemMeta(im);
-        }
-        item.setItemStack(is);
-    }
-
-    @EventHandler
     public void onPickup(EntityPickupItemEvent event){
         if(plugin.getGameState() != GameState.INGAME){
             event.setCancelled(true);
