@@ -283,6 +283,7 @@ public class Events implements Listener {
                         is.addUnsafeEnchantment(Enchantment.DURABILITY, 1);
                     }
                     open.setItem(i, is);
+                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.5f);
                 }
                 ArrayList<ItemStack> goodsList = this.plugin.getShopUtilsInstance().getShopCategoryItems(slot, player);
                 for(int i=9; i<45; i++){
@@ -322,6 +323,7 @@ public class Events implements Listener {
                         if(this.plugin.getPlayerArmor(player) > clickedItemSlot){
                             //Jiz ma stejny nebo lepsi armor, nekupovat znovu
                             player.sendMessage(this.plugin.getPrefix()+this.plugin.getConfig().getString("game.shopAlreadyHaveArmor"));
+                            player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_DESTROY, 1.0f, 1.5f);
                             return;
                         }
                     }
@@ -330,6 +332,7 @@ public class Events implements Listener {
                     if(im == null || !im.hasLore()){
                         return; //kliknuto na item bez ceny, nic nedelat
                     }
+                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.5f);
                     List<String> lore = im.getLore();
                     String priceLine = Objects.requireNonNull(lore).get(lore.size()-1);
                     String[] priceSplit = priceLine.split(" ");
