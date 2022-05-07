@@ -267,6 +267,13 @@ public class ShopUtils {
             item_1.setItemMeta(im);
             list.add(item_1);
 
+            ItemStack item_2 = new ItemStack(Material.ENDER_PEARL);
+            im = item_2.getItemMeta();
+            if(im!=null) im.setDisplayName(this.plugin.getConfig().getString("shop.names.special.ender_pearl"));
+            if(im!=null) im.setLore(Collections.singletonList(getItemPriceString("shop.prices.special.ender_pearl")));
+            item_2.setItemMeta(im);
+            list.add(item_2);
+
         }
 
         return list;
