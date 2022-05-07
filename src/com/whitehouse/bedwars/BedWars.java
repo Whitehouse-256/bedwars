@@ -129,6 +129,10 @@ public class BedWars extends JavaPlugin {
             }
             //Vsichni hraci jsou v nejakem tymu
             p.getInventory().clear();
+            p.getItemOnCursor().setAmount(0);
+            for(ItemStack is : p.getInventory().getExtraContents()){
+                is.setAmount(0);
+            }
             p.teleport(teamSpawns.get(team));
             p.setGameMode(GameMode.SURVIVAL);
             this.playerUtilsInstance.setPlayersArmor(p);
@@ -545,6 +549,12 @@ public class BedWars extends JavaPlugin {
             this.myScoreboardInstance.removePlayerFromAllTeams(p);
             //dat kazdemu spectatora
             p.setGameMode(GameMode.SPECTATOR);
+            //kazdemu smazat inventar
+            p.getInventory().clear();
+            p.getItemOnCursor().setAmount(0);
+            for(ItemStack is : p.getInventory().getExtraContents()){
+                is.setAmount(0);
+            }
         }
         //nastavit scoreboard
         myScoreboardInstance.setLineCount(2);
