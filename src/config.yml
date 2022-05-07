@@ -85,6 +85,7 @@ shop:
       shears: "§fNuzky"
     special:
       fireball: "§cFireball"
+      ender_pearl: §eEnder Perla
   prices:
     armor:
       leather: "gold,1"
@@ -109,6 +110,7 @@ shop:
       shears: "iron,24"
     special:
       fireball: "iron,32"
+      ender_pearl: gold,16
 
 arena:
   teams: 4
