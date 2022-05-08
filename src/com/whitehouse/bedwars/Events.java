@@ -277,13 +277,13 @@ public class Events implements Listener {
                     return; //kliknuto na prazdno, nic se nedeje
                 }
                 ArrayList<ItemStack> list = this.plugin.getShopUtilsInstance().getShopCategoryListItems();
+                player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.5f);
                 for(int i=0; i<list.size(); i++){
                     ItemStack is = list.get(i);
                     if(i == slot){
                         is.addUnsafeEnchantment(Enchantment.DURABILITY, 1);
                     }
                     open.setItem(i, is);
-                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.5f);
                 }
                 ArrayList<ItemStack> goodsList = this.plugin.getShopUtilsInstance().getShopCategoryItems(slot, player);
                 for(int i=9; i<45; i++){
