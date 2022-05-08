@@ -131,8 +131,9 @@ public class BedWars extends JavaPlugin {
             p.getInventory().clear();
             p.getItemOnCursor().setAmount(0);
             for(ItemStack is : p.getInventory().getExtraContents()){
-                is.setAmount(0);
+                if(is != null) is.setAmount(0);
             }
+            p.getOpenInventory().getTopInventory().clear();
             p.teleport(teamSpawns.get(team));
             p.setGameMode(GameMode.SURVIVAL);
             this.playerUtilsInstance.setPlayersArmor(p);
@@ -553,8 +554,9 @@ public class BedWars extends JavaPlugin {
             p.getInventory().clear();
             p.getItemOnCursor().setAmount(0);
             for(ItemStack is : p.getInventory().getExtraContents()){
-                is.setAmount(0);
+                if(is != null) is.setAmount(0);
             }
+            p.getOpenInventory().getTopInventory().clear();
         }
         //nastavit scoreboard
         myScoreboardInstance.setLineCount(2);
