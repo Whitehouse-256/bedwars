@@ -1,5 +1,7 @@
 package com.whitehouse.bedwars;
 
+import com.google.common.io.ByteArrayDataOutput;
+import com.google.common.io.ByteStreams;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.EntityType;
@@ -16,10 +18,13 @@ import java.util.Collections;
 import java.util.Objects;
 
 public class PlayerUtils {
+    private static final String skinChannel = "sr:messagechannel";
+
     private final BedWars plugin;
 
     public PlayerUtils(BedWars plugin){
         this.plugin = plugin;
+        Bukkit.getMessenger().registerOutgoingPluginChannel(plugin, skinChannel);
     }
 
     public Location getLobby(){
@@ -316,6 +321,16 @@ public class PlayerUtils {
         if(pocet == 1) return p1;
         if(pocet >= 2 && pocet <= 4) return p234;
         return p5;
+    }
+
+    public void setSkin(Player player, String skin){
+        ByteArrayDataOutput out = ByteStreams.newDataOutput();
+        out.writeUTF("set");
+        out.writeUTF("setSkin");
+        out.writeUTF(player.getName());
+        out.writeUTF(skin);
+
+        player.sendPluginMessage(plugin, skinChannel, out.toByteArray());
     }
 
 }

@@ -59,6 +59,14 @@ public class Events implements Listener {
                 .replace("%online%", String.valueOf(playersOnline))
                 .replace("%max%", String.valueOf(maxPlayers));
         event.setJoinMessage(joinMessage);
+
+        //nastavit skin
+        Bukkit.getScheduler().runTaskLater(this.plugin, new Runnable() {
+            @Override
+            public void run() {
+                plugin.getPlayerUtilsInstance().setSkin(player, player.getName());
+            }
+        }, 2);
     }
 
     @EventHandler
