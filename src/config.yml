@@ -29,6 +29,7 @@ main:
   chatFormatLobby: "§7%player% §e§l» §f%message%"
   chatFormatIngameTeam: "%playerColor%§lTEAM§r %playerColor%%player% §7§l» §f%message%"
   chatFormatIngameAll: "§f§lALL§r %playerColor%%player% §7§l» §f%message%"
+  chatFormatIngameSpec: "§8§lSPEC§r %player% §7§l» §f%message%"
 game:
   minPlayers: 2
   startTime: 30

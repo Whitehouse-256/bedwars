@@ -640,7 +640,15 @@ public class Events implements Listener {
         }else{
             int team = plugin.getTeamOfPlayer(player);
             if(team < 0){
-                //hrac neni ve hre - je spec - chat mu nepujde
+                //spec chat
+                String format = Objects.requireNonNull(plugin.getConfig().getString("main.chatFormatIngameSpec"))
+                        .replace("%player%", player.getName())
+                        .replace("%message%", msg);
+                List<Player> playersSpectating = plugin.getSpectators();
+                playersSpectating.addAll(plugin.getOperators()); //operatori taky vidi chat
+                for(Player p : playersSpectating){
+                    p.sendMessage(format);
+                }
                 return;
             }
             String color = this.plugin.getPlayerUtilsInstance().getColorOfNthTeam(team).toString();
@@ -659,6 +667,7 @@ public class Events implements Listener {
                         .replace("%player%", player.getName())
                         .replace("%message%", msg);
                 List<Player> playersInTeam = plugin.getPlayersInTeam(team);
+                playersInTeam.addAll(plugin.getOperators()); //operatori taky vidi chat
                 for(Player p : playersInTeam){
                     p.sendMessage(format);
                 }

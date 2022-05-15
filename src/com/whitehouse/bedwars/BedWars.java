@@ -429,6 +429,24 @@ public class BedWars extends JavaPlugin {
         return list;
     }
 
+    public ArrayList<Player> getSpectators(){
+        ArrayList<Player> spectatorList = new ArrayList<>(Bukkit.getOnlinePlayers());
+        int numOfTeams = this.getConfig().getInt("arena.teams");
+        for(int i=0; i<numOfTeams; i++){
+            ArrayList<Player> list = this.getPlayersInTeam(i);
+            spectatorList.removeAll(list);
+        }
+        return spectatorList;
+    }
+
+    public ArrayList<Player> getOperators(){
+        ArrayList<Player> operators = new ArrayList<>();
+        for(Player player : Bukkit.getOnlinePlayers()){
+            if(player.isOp()) operators.add(player);
+        }
+        return operators;
+    }
+
     public void addPlayerToTeam(int team, Player player){
         ArrayList<Player> list = this.getPlayersInTeam(team);
         if(!list.contains(player)){
