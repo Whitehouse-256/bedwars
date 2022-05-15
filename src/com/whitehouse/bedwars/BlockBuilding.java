@@ -34,4 +34,8 @@ public class BlockBuilding {
         return list.contains(blockCoords);
     }
 
+    public void clearMap(){
+        this.modifiedBlocks.clear();
+    }
+
 }

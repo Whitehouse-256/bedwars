@@ -589,6 +589,7 @@ public class BedWars extends JavaPlugin {
                     Bukkit.broadcastMessage(getPrefix()+Objects.requireNonNull(getConfig().getString("game.arenaRestartingNow")));
                     gameState = GameState.LOBBY;
                     mapRegeneratorInstance.regenMap(null); //zregenerovat bloky
+                    blockBuildingInstance.clearMap(); //smazat mapu o hracem postavenych blocich
                     //smazat vsechny armory
                     playerArmor.clear();
                     //smazat vsechny tymy
