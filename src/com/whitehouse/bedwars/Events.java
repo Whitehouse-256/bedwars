@@ -67,7 +67,7 @@ public class Events implements Listener {
             public void run() {
                 plugin.getPlayerUtilsInstance().setSkin(player, player.getName());
             }
-        }, 2);
+        }, 40);
 
         //nastavit 1.8 pvp
         player.getAttribute(Attribute.GENERIC_ATTACK_SPEED).setBaseValue(16);
