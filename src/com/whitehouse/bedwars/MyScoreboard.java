@@ -62,6 +62,7 @@ public class MyScoreboard {
         Team rightTeam = Objects.requireNonNull(this.globalSidebarScoreboard.getTeam("team"+team));
         rightTeam.setColor(plugin.getPlayerUtilsInstance().getColorOfNthTeam(team));
         rightTeam.setAllowFriendlyFire(false);
+        rightTeam.setOption(Team.Option.COLLISION_RULE, Team.OptionStatus.FOR_OTHER_TEAMS);
         //rightTeam.setPrefix(plugin.getMenuInstance().getColorOfNthTeam(team)+" "); //pokud by se chtel davat i prefix
         rightTeam.addEntry(player.getName());
     }
