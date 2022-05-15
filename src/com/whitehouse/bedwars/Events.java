@@ -1,6 +1,7 @@
 package com.whitehouse.bedwars;
 
 import org.bukkit.*;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.enchantments.Enchantment;
@@ -67,6 +68,9 @@ public class Events implements Listener {
                 plugin.getPlayerUtilsInstance().setSkin(player, player.getName());
             }
         }, 2);
+
+        //nastavit 1.8 pvp
+        player.getAttribute(Attribute.GENERIC_ATTACK_SPEED).setBaseValue(16);
     }
 
     @EventHandler
@@ -117,6 +121,9 @@ public class Events implements Listener {
                 }
                 if(event.getCause() == EntityDamageEvent.DamageCause.VOID){
                     event.setDamage(1000);
+                } else if(event.getCause() == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK){
+                    //vypnout sweep damage
+                    event.setCancelled(true);
                 }
             }
         }
