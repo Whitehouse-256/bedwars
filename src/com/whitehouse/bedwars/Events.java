@@ -621,7 +621,7 @@ public class Events implements Listener {
                 if (!plugin.getBlockBuildingInstance().containsBlock(block)) {
                     //tento blok nebyl postaven hracem
                     String materialStr = block.getType().toString();
-                    if(materialStr.contains("GLASS") || materialStr.contains("LEAVES")){ //povolene bloky
+                    if(materialStr.contains("GLASS") || materialStr.contains("LEAVES") || materialStr.contains("TALL_GRASS")){ //povolene bloky
                         block.setType(Material.AIR); //aby nespadl drop
                         return;
                     }
