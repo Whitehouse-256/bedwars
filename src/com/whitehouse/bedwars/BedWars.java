@@ -45,6 +45,9 @@ public class BedWars extends JavaPlugin {
         pm.registerEvents(eventsInstance, this);
         //prikazy
         Objects.requireNonNull(getCommand("bw-setup")).setExecutor(new SetupCommand(this));
+        LobbyCommand lobbyCommand = new LobbyCommand(this);
+        getCommand("lobby").setExecutor(lobbyCommand);
+        getCommand("hub").setExecutor(lobbyCommand);
         this.saveDefaultConfig();
         this.reloadConfig();
         PluginDescriptionFile pdfFile = this.getDescription();

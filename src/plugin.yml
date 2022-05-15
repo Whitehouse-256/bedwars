@@ -6,3 +6,9 @@ commands:
   bw-setup:
     description: Prepnuti do setup rezimu
     usage: "Pouziti: '/<command>'"
+  lobby:
+    description: Presunuti na lobby
+    usage: "Pouziti: '/<command>'"
+  hub:
+    description: Presunuti na lobby
+    usage: "Pouziti: '/<command>'"

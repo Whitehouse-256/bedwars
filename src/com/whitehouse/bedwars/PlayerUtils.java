@@ -19,12 +19,14 @@ import java.util.Objects;
 
 public class PlayerUtils {
     private static final String skinChannel = "sr:messagechannel";
+    private static final String bungeeChannel = "BungeeCord";
 
     private final BedWars plugin;
 
     public PlayerUtils(BedWars plugin){
         this.plugin = plugin;
         Bukkit.getMessenger().registerOutgoingPluginChannel(plugin, skinChannel);
+        Bukkit.getMessenger().registerOutgoingPluginChannel(plugin, bungeeChannel);
     }
 
     public Location getLobby(){
@@ -325,12 +327,19 @@ public class PlayerUtils {
 
     public void setSkin(Player player, String skin){
         ByteArrayDataOutput out = ByteStreams.newDataOutput();
-        out.writeUTF("set");
         out.writeUTF("setSkin");
         out.writeUTF(player.getName());
         out.writeUTF(skin);
 
         player.sendPluginMessage(plugin, skinChannel, out.toByteArray());
+    }
+
+    public void sendPlayerBungee(Player player, String server){
+        ByteArrayDataOutput out = ByteStreams.newDataOutput();
+        out.writeUTF("Connect");
+        out.writeUTF(server);
+
+        player.sendPluginMessage(plugin, bungeeChannel, out.toByteArray());
     }
 
 }
