@@ -19,9 +19,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 public class Events implements Listener {
     private final BedWars plugin;
@@ -644,7 +642,7 @@ public class Events implements Listener {
                 String format = Objects.requireNonNull(plugin.getConfig().getString("main.chatFormatIngameSpec"))
                         .replace("%player%", player.getName())
                         .replace("%message%", msg);
-                List<Player> playersSpectating = plugin.getSpectators();
+                Set<Player> playersSpectating = new HashSet<>(plugin.getSpectators()); //set nepodporuje duplicity
                 playersSpectating.addAll(plugin.getOperators()); //operatori taky vidi chat
                 for(Player p : playersSpectating){
                     p.sendMessage(format);
@@ -666,8 +664,9 @@ public class Events implements Listener {
                         .replace("%playerColor%", color)
                         .replace("%player%", player.getName())
                         .replace("%message%", msg);
-                List<Player> playersInTeam = plugin.getPlayersInTeam(team);
+                Set<Player> playersInTeam = new HashSet<>(plugin.getPlayersInTeam(team)); //set nepodporuje duplicity
                 playersInTeam.addAll(plugin.getOperators()); //operatori taky vidi chat
+                playersInTeam.addAll(plugin.getSpectators()); //spectatori taky vidi chat
                 for(Player p : playersInTeam){
                     p.sendMessage(format);
                 }
