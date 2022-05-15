@@ -110,7 +110,7 @@ shop:
       diamond_pickaxe: "diamond,4"
       shears: "iron,24"
     special:
-      fireball: "iron,32"
+      fireball: "iron,48"
       ender_pearl: gold,16
 
 arena:
